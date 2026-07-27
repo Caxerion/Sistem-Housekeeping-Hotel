@@ -1,6 +1,3 @@
-# This workflow will do a clean installation of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
 name: Node.js CI
 
 on:
@@ -11,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,11 +16,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    
+    # Locates the subfolder containing package.json
+    - name: Find Project Root
+      id: find-path
+      run: |
+        TARGET_DIR=$(find . -name "package.json" -not -path "*/node_modules/*" -exec dirname {} \+ | head -n 1)
+        echo "project_path=${TARGET_DIR}" >> $GITHUB_OUTPUT
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        # Removed cache: 'npm' to prevent the lock file missing error
-    - run: npm install  # Changed from 'npm ci' since 'npm ci' requires a package-lock.json
-    - run: npm run build --if-present
-    - run: npm test
+
+    - name: Install Dependencies
+      working-directory: ${{ steps.find-path.outputs.project_path }}
+      run: npm install
+
+    - name: Build Source
+      working-directory: ${{ steps.find-path.outputs.project_path }}
+      run: npm run build --if-present
+
+    - name: Run Tests
+      working-directory: ${{ steps.find-path.outputs.project_path }}
+      run: npm test
