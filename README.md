@@ -65,11 +65,14 @@ Sistem-Housekeeping-Hotel/
 │   └── server.js                  # entry point: setup Express + jalankan server
 │
 └── react-frontend/               # Frontend (React)
+    ├── public/                  # favicon ...
     ├── src/
+    │   ├── assets/                 
     │   ├── pages/                  # Login, Dashboard, Staff, Rooms, Inventory
     │   ├── components/
     │   ├── services/               # axios instance & pemanggilan API
     │   └── App.jsx
+    ├── index.html
     ├── .env.example
     └── package.json
 ```
@@ -99,7 +102,7 @@ cd Sistem-Housekeeping-Hotel
 Supaya kamu bisa menarik update terbaru dari repo tim:
 
 ```bash
-git remote add upstream https://github.com/<org-atau-owner-asli>/Sistem-Housekeeping-Hotel.git
+git remote add upstream https://github.com/Caxerion2/Sistem-Housekeeping-Hotel.git
 git remote -v
 ```
 
