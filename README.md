@@ -248,3 +248,6 @@ Project Kelompok B — Sistem Housekeeping Hotel
 ## 📄 Lisensi
 
 Proyek ini dibuat untuk keperluan tugas akademik.
+
+
+<!-- test -->
