@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS applications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+INSERT INTO applications (id, name, description) VALUES
+(1, 'Admin Panel & Config', 'Aplikasi pusat pengaturan pengguna, master data kamar, dan hak akses'),
+(2, 'Supervisor', 'Aplikasi untuk supervisor untuk mengawasi dan mengelola operasional hotel'),
+(3, 'Front Office POS', 'Aplikasi kasir resepsionis untuk pemesanan, check-in, check-out, dan pembayaran'),
+(4, 'Housekeeping Management', 'Aplikasi pencatatan status kebersihan kamar dan log pembersihan'),
+(5, 'Executive & Finance Dashboard', 'Aplikasi laporan analisis pendapatan, histori refund, dan keterisian kamar');
 -- 5. PIVOT TABLE: application_users (Hak Akses Aplikasi)
 CREATE TABLE IF NOT EXISTS application_users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,7 +73,17 @@ CREATE TABLE IF NOT EXISTS application_users (
 );
 
 
--- 6. MASTER TABLE: room_types (Tipe Kamar)
+-- 6. MASTER TABLE: supervisors (Supervisor Auth)
+CREATE TABLE IF NOT EXISTS supervisors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 7. MASTER TABLE: room_types (Tipe Kamar)
 CREATE TABLE IF NOT EXISTS room_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE, -- Contoh: Standard, Deluxe, Presidential Suite
@@ -75,7 +92,7 @@ CREATE TABLE IF NOT EXISTS room_types (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
--- 7. TABLE: rooms (Data Fisik Kamar)
+-- 8. TABLE: rooms (Data Fisik Kamar)
 CREATE TABLE IF NOT EXISTS rooms (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_type_id INT NOT NULL,
@@ -86,7 +103,7 @@ CREATE TABLE IF NOT EXISTS rooms (
     FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE RESTRICT
 );
 
--- 8. MASTER TABLE: amenities (Daftar Fasilitas)
+-- 9. MASTER TABLE: amenities (Daftar Fasilitas)
 CREATE TABLE IF NOT EXISTS amenities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE, -- Contoh: AC, Smart TV, WiFi, Mini Fridge, Bathtub
@@ -96,7 +113,7 @@ CREATE TABLE IF NOT EXISTS amenities (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 9. PIVOT TABLE: room_type_amenities (Relasi N:M)
+-- 10. PIVOT TABLE: room_type_amenities (Relasi N:M)
 CREATE TABLE IF NOT EXISTS room_type_amenities (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_type_id INT NOT NULL,
@@ -109,7 +126,7 @@ CREATE TABLE IF NOT EXISTS room_type_amenities (
 );
 
 
--- 10. MASTER TABLE: guests | tamu
+-- 11. MASTER TABLE: guests | tamu
 CREATE TABLE IF NOT EXISTS guests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -241,7 +258,7 @@ CREATE TABLE IF NOT EXISTS room_maintenance_schedule (
 --  MODUL INVENTORY ===
 -- =============== ===
 
--- 11. MASTER TABLE: inventory_categories (Kategori Barang Inventaris)
+-- 12. MASTER TABLE: inventory_categories (Kategori Barang Inventaris)
 CREATE TABLE IF NOT EXISTS inventory_categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE, -- Contoh: Linen, Toiletries, Cleaning Supplies, Antiseptik
@@ -250,7 +267,7 @@ CREATE TABLE IF NOT EXISTS inventory_categories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 12. TABLE: inventory_items (Data Barang & Stok)
+-- 13. TABLE: inventory_items (Data Barang & Stok)
 CREATE TABLE IF NOT EXISTS inventory_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     category_id INT NOT NULL,
