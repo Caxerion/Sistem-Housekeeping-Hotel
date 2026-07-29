@@ -235,3 +235,55 @@ CREATE TABLE IF NOT EXISTS room_maintenance_schedule (
     INDEX idx_schedule_room (room_id),
     INDEX idx_schedule_date (scheduled_date)
 );
+
+
+-- =============== ===
+--  MODUL INVENTORY ===
+-- =============== ===
+
+-- 11. MASTER TABLE: inventory_categories (Kategori Barang Inventaris)
+CREATE TABLE IF NOT EXISTS inventory_categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE, -- Contoh: Linen, Toiletries, Cleaning Supplies, Antiseptik
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 12. TABLE: inventory_items (Data Barang & Stok)
+CREATE TABLE IF NOT EXISTS inventory_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    category_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,             -- Nama barang, Contoh: Handuk Mandi, Sabun Mandi, Cairan Antiseptik
+    unit VARCHAR(20) NOT NULL DEFAULT 'pcs', -- Satuan: pcs, botol, liter, dus, dll
+    current_stock INT NOT NULL DEFAULT 0,   -- Stok saat ini
+    minimum_stock INT NOT NULL DEFAULT 0,   -- Ambang batas stok minimum
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES inventory_categories(id) ON DELETE RESTRICT,
+    CONSTRAINT chk_stock_non_negative CHECK (current_stock >= 0),
+    CONSTRAINT chk_minimum_non_negative CHECK (minimum_stock >= 0),
+    INDEX idx_inventory_category (category_id),
+    INDEX idx_inventory_name (name)
+);
+-- Catatan: kolom "Status" (Aman/Menipis) TIDAK disimpan di tabel.
+-- Dihitung on-the-fly di query, contoh:
+-- SELECT *, CASE WHEN current_stock <= minimum_stock THEN 'Menipis' ELSE 'Aman' END AS status
+-- FROM inventory_items;
+
+-- 13. TRANSACTION TABLE: inventory_stock_logs (Riwayat Keluar/Masuk Stok Barang)
+CREATE TABLE IF NOT EXISTS inventory_stock_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    item_id INT NOT NULL,
+    employee_id INT NOT NULL, -- Pegawai yang mencatat/melakukan perubahan stok
+    type ENUM('in', 'out', 'adjustment') NOT NULL, -- in = restock/pembelian, out = pemakaian, adjustment = koreksi stok opname
+    quantity INT NOT NULL,    -- Selalu bernilai positif, arah perubahan ditentukan oleh kolom "type"
+    note TEXT,                -- Contoh: "Restock dari supplier", "Dipakai untuk cleaning kamar 101"
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (item_id) REFERENCES inventory_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
+    CONSTRAINT chk_quantity_positive CHECK (quantity > 0),
+    INDEX idx_stock_log_item (item_id),
+    INDEX idx_stock_log_date (created_at)
+);
+
