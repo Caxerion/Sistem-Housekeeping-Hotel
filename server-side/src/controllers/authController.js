@@ -121,8 +121,8 @@ const login = async (req, res) => {
 
     try {
         const [rows] = await pool.query(
-            "SELECT * FROM vw_account WHERE username = ?",
-            [username]
+            "SELECT * FROM vw_account WHERE username = ? OR employee_email = ?",
+            [username, username]
         );
 
         if (rows.length === 0) {

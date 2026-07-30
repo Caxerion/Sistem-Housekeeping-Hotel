@@ -60,9 +60,9 @@ function Dashboard() {
 
   const statsCards = [
     { value: statsData.totalKamar, label: 'Total Kamar', colorClass: 'text-blue-600' },
-    { value: statsData.available, label: 'Available', colorClass: 'text-green-600' },
+    { value: statsData.available, label: 'Kamar Available', colorClass: 'text-green-600' },
     { value: statsData.sedangMaintenance, label: 'Jumlah Kamar Maintenance', colorClass: 'text-amber-500' },
-    { value: statsData.staffHadirHariIni, label: 'Staff Aktif Hari Ini', colorClass: 'text-purple-500' },
+    { value: statsData.staffHadirHariIni, label: 'Jumlah    Staff Aktif', colorClass: 'text-purple-500' },
   ];
 
   return (

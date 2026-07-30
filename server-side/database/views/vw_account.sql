@@ -4,9 +4,10 @@ CREATE OR REPLACE VIEW vw_account AS
 SELECT 
     u.id AS user_id,
     u.username,
-    u.password, -- Backend butuh ini untuk mengecek validitas password (bcrypt)
+    u.password,
     e.full_name AS employee_name,
     p.name AS employee_position,
+    e.email AS employee_email,
     
     -- Menggabungkan data multi-aplikasi menjadi bentuk JSON Array langsung di Database!
     JSON_ARRAYAGG(

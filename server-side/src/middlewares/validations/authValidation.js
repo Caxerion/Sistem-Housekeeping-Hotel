@@ -47,7 +47,7 @@ const validateLogin = (req, res, next) => {
     const errors = [];
 
     if (!username || username.trim() === '') {
-        errors.push({ msg: 'username is required' });
+        errors.push({ msg: 'username atau email is required' });
     }
     if (!password || password.trim() === '') {
         errors.push({ msg: 'password is required' });
