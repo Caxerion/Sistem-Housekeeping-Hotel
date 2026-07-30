@@ -63,17 +63,6 @@ const createSchedule = asyncHandler(async (req, res) => {
     });
   }
 
-  const [overlapRows] = await pool.query(
-    `SELECT id FROM room_maintenance_schedule WHERE room_id = ? AND status IN ('scheduled', 'in_progress')`,
-    [room_id]
-  );
-  if (overlapRows.length > 0) {
-    return res.status(409).json({
-      success: false,
-      message: 'Kamar ini sudah memiliki jadwal maintenance aktif.',
-    });
-  }
-
   const [staffRows] = await pool.query(
     `SELECT e.id FROM employees e JOIN positions p ON p.id = e.position_id WHERE e.id = ? AND p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')`,
     [scheduled_by]
@@ -82,6 +71,17 @@ const createSchedule = asyncHandler(async (req, res) => {
     return res.status(400).json({
       success: false,
       message: 'scheduled_by harus berupa ID karyawan Housekeeping yang valid.',
+    });
+  }
+
+  const [busyRows] = await pool.query(
+    `SELECT id FROM room_maintenance_schedule WHERE scheduled_by = ? AND status IN ('scheduled', 'in_progress')`,
+    [scheduled_by]
+  );
+  if (busyRows.length > 0) {
+    return res.status(409).json({
+      success: false,
+      message: 'Staf ini sedang bertugas di kamar lain. Selesaikan tugas terlebih dahulu sebelum dialokasikan ke kamar baru.',
     });
   }
 

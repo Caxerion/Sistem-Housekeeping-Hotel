@@ -127,15 +127,24 @@ npm install
 Buat file `.env` di dalam folder `server-side/` (belum ada di repo karena di-`.gitignore`), isinya:
 
 ```
-PORT=5000
+# APP CONFIG
+NODE_ENV=development
+APP_NAME=Housekeeping Management
+PORT=3000
+
+# DATABASE
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=grand_nusantara_hotel
-JWT_SECRET=ganti_dengan_string_acak_yang_panjang
-JWT_EXPIRES_IN=8h
-CORS_ORIGIN=http://localhost:5173
+DB_PASSWORD=MYDBkenn128344
+DB_NAME=hotel_db
+
+# AUTH
+JWT_SECRET="your_super_secret_jwt_key_here"
+JWT_EXPIRES_IN=9h
+
+# CORS
+FRONTEND_URL=http://localhost:5173
 ```
 
 Jalankan server:
