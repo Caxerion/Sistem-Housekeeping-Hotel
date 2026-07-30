@@ -6,7 +6,6 @@ const validateRegister = (req, res, next) => {
     const position_id = body.position_id;
     const username = body.username || body.Username;
     const password = body.password || body.Password;
-    const role = body.role;
     const errors = [];
 
     if (!full_name || full_name.trim() === '') {
@@ -28,11 +27,6 @@ const validateRegister = (req, res, next) => {
     }
     if (!password || password.length < 6) {
         errors.push({ msg: 'password must be at least 6 characters' });
-    }
-    if (role !== undefined && role !== null && role !== '') {
-        if (role !== 'admin' && role !== 'staff') {
-            errors.push({ msg: 'role must be either admin or staff' });
-        }
     }
 
     if (errors.length > 0) {

@@ -10,7 +10,6 @@ const register = async (req, res) => {
     const position_id = body.position_id;
     const username = body.username || body.Username;
     const password = body.password || body.Password;
-    const role = body.role;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,7 +46,11 @@ const register = async (req, res) => {
         }
 
         const applicationId = appResult[0].id;
-        const userRole = (role === 'admin' || role === 'staff') ? role : 'staff';
+
+        const [positionRows] = await pool.query("SELECT name FROM positions WHERE id = ?", [position_id]);
+        const positionName = positionRows.length > 0 ? positionRows[0].name : '';
+        const adminPositions = ['Super Admin', 'Housekeeping Supervisor'];
+        const userRole = adminPositions.includes(positionName) ? 'admin' : 'staff';
 
         await pool.query(
             "INSERT INTO application_users (application_id, user_id, role) VALUES (?, ?, ?)",
@@ -152,8 +155,15 @@ const login = async (req, res) => {
 
         const App = user.access_rights.find(access => access.app_name === myApp);
 
+        const [empRows] = await pool.query(
+            "SELECT employee_id FROM users WHERE id = ?",
+            [user.user_id]
+        );
+        const employeeId = empRows.length > 0 ? empRows[0].employee_id : null;
+
         const tokenPayload = {
             user_id: user.user_id,
+            employee_id: employeeId,
             username: user.username,
             employee_name: user.employee_name,
             employee_position: user.employee_position,
