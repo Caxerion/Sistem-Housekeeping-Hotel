@@ -31,10 +31,9 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-md">
       <div className="w-full pl-2 pr-4 sm:pl-10 sm:pr-6">
         <div className="h-18 flex items-center justify-between">
-          {/* Brand */}
           <Link to="/" className="flex items-center gap-3">
             <div className="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-[20px]" style={{ background: 'linear-gradient(135deg,#ffffff33,#ffffff11)' }}>
-              <i class="fa-solid fa-hotel"></i>
+              <i className="fa-solid fa-hotel text-white/90"></i>
             </div>
             <div className="text-[15px] font-bold leading-[1.15] text-white">
               Housekeeping App<span className="block text-[11px] font-normal opacity-[0.85]">{pageTitle}</span>
@@ -65,7 +64,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                     onClick={() => setIsProfileOpen(false)}
                     className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    <i class="fa-brands fa-github"></i> Repository
+                    <i class="fa-solid fa-moon"></i> Dark Mode
                   </Link>
                   <button
                     onClick={() => {

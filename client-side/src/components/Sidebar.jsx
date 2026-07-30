@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menuItems = [
-  { label: 'Dashboard', to: '/dashboard', icon: 'fa-solid fa-gauge' },
+  { label: 'Dashboard', to: '/dashboard', icon: 'fa-solid fa-chart-area' },
   { label: 'Staff', to: '/staff', icon: 'fa-solid fa-user' },
   { label: 'Kamar', to: '/status-kamar', icon: 'fa-solid fa-bed' },
   { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -13,8 +14,15 @@ export default function Login() {
     setError('');
     try {
       await login(username, password);
+      Swal.fire({
+        icon: 'success',
+        title: 'Login Berhasil',
+        text: 'Welcome Bro!',
+        timer: 1500,
+        showConfirmButton: false,
+      });
       navigate('/');
-    } catch (err) {
+    } catch {
       // error already handled in context
     }
   };

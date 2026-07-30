@@ -61,8 +61,8 @@ function Dashboard() {
   const statsCards = [
     { value: statsData.totalKamar, label: 'Total Kamar', colorClass: 'text-blue-600' },
     { value: statsData.available, label: 'Available', colorClass: 'text-green-600' },
-    { value: statsData.sedangMaintenance, label: 'Sedang Maintenance', colorClass: 'text-amber-500' },
-    { value: statsData.staffHadirHariIni, label: 'Staff Hadir Hari Ini', colorClass: 'text-purple-500' },
+    { value: statsData.sedangMaintenance, label: 'Jumlah Kamar Maintenance', colorClass: 'text-amber-500' },
+    { value: statsData.staffHadirHariIni, label: 'Staff Aktif Hari Ini', colorClass: 'text-purple-500' },
   ];
 
   return (
@@ -71,7 +71,7 @@ function Dashboard() {
         <h1 className="text-2xl font-bold text-gray-800">
           Selamat {greeting}, {user?.employee_name}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">{formattedTime} WIB</p>
+        <p className="text-sm text-gray-500 mt-1">Waktu Menunjukkan Pukul: {formattedTime} WIB</p>
       </div>
 
       <p className="text-lg font-light text-gray-400 mb-2">Dashboard Status</p>
