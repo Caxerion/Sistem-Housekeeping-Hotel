@@ -34,10 +34,10 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
           {/* Brand */}
           <Link to="/" className="flex items-center gap-3">
             <div className="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center text-[20px]" style={{ background: 'linear-gradient(135deg,#ffffff33,#ffffff11)' }}>
-              🏨
+              <i class="fa-solid fa-hotel"></i>
             </div>
             <div className="text-[15px] font-bold leading-[1.15] text-white">
-              Grand Nusantara Hotel<span className="block text-[11px] font-normal opacity-[0.85]">{pageTitle}</span>
+              Housekeeping App<span className="block text-[11px] font-normal opacity-[0.85]">{pageTitle}</span>
             </div>
           </Link>
 
@@ -65,7 +65,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                     onClick={() => setIsProfileOpen(false)}
                     className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    Repository
+                    <i class="fa-brands fa-github"></i> Repository
                   </Link>
                   <button
                     onClick={() => {
@@ -74,7 +74,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                     }}
                     className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    Log Out
+                    <i class="fa-solid fa-outdent"></i> Log Out
                   </button>
                 </div>
               )}

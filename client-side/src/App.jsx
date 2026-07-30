@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { Routes, Route } from "react-router-dom";
@@ -10,13 +11,17 @@ import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 
 function App () {
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+    const sidebarWidth = sidebarCollapsed ? 'ml-16' : 'ml-56';
+
     return(
         <Routes>
             <Route path="/login" element={<Login/>}/>
             <Route path="/dashboard" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar pageTitle="Dashboard"/>
                         <Dashboard/>
                     </div>
@@ -24,8 +29,8 @@ function App () {
             }/>
             <Route path="/" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar pageTitle="Dashboard"/>
                         <Dashboard/>
                     </div>
@@ -33,8 +38,8 @@ function App () {
             }/>
             <Route path="/datapetugas" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <DataPetugas/>
                     </div>
@@ -42,8 +47,8 @@ function App () {
             }/>
             <Route path="/datakamar" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <DataKamar/>
                     </div>
@@ -51,8 +56,8 @@ function App () {
             }/>
             <Route path="/statuskamar" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <StatusKamar/>
                     </div>
@@ -60,8 +65,8 @@ function App () {
             }/>
             <Route path="/riwayatpembersihan" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <RiwayatPembersihan/>
                     </div>
@@ -69,8 +74,8 @@ function App () {
             }/>
             <Route path="/inventory" element={
                 <div className="flex min-h-screen bg-gray-50">
-                    <Sidebar/>
-                    <div className="flex-1 ml-56 pt-20">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <Inventory/>
                     </div>
