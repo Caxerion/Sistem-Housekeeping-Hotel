@@ -204,6 +204,14 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        return res.status(200).json({ success: true, message: "Logout berhasil" });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: "Terjadi kesalahan pada server internal." });
+    }
+};
+
 module.exports = {
     register,
     login

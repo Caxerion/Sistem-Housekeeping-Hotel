@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,7 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const login = async (username, password) => {
     setLoading(true);
@@ -39,12 +41,21 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-  };
-
+  const logout = async () => {
+    try {
+        await fetch('http://localhost:3000/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (err) {
+        console.error('Logout error:', err);
+    } finally {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        navigate('/login');
+    }
+};
   return (
     <AuthContext.Provider value={{ user, login, logout, loading, error, setError }}>
       {children}
