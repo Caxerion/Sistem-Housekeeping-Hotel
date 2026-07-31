@@ -7,6 +7,7 @@ import DataKamar from "./pages/DataKamar";
 import StatusKamar from "./pages/StatusKamar";
 import RiwayatPembersihan from "./pages/RiwayatPembersihan";
 import PembagianMaintenance from "./pages/PembagianMaintenance";
+import LogsKamar from "./pages/LogsKamar";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 import Staff from './pages/Staff';
@@ -88,6 +89,15 @@ function App () {
                     <div className={`flex-1 ${sidebarWidth} pt-20`}>
                         <Navbar/>
                         <Inventory/>
+                    </div>
+                </div>
+            }/>
+            <Route path="/logs-kamar" element={
+                <div className="flex min-h-screen bg-gray-50">
+                    <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(prev => !prev)}/>
+                    <div className={`flex-1 ${sidebarWidth} pt-20`}>
+                        <Navbar pageTitle="Logs Kamar"/>
+                        <LogsKamar/>
                     </div>
                 </div>
             }/>

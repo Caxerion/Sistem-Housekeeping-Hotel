@@ -104,7 +104,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                     }}
                     className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    <i class="fa-solid fa-outdent"></i> Log Out
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
                   </button>
                 </div>
               )}
@@ -238,7 +238,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
               }}
               className="mt-2 w-full px-3 py-2.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 text-left"
             >
-              Log Out
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
             </button>
           </div>
         </div>

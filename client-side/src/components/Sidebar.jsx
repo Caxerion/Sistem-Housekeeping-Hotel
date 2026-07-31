@@ -11,6 +11,7 @@ const menuItems = [
     children: [
       { label: 'Status Kamar', to: '/statuskamar', icon: 'fa-solid fa-door-open' },
       { label: 'Pembagian Maintenance', to: '/pembagian-maintenance', icon: 'fa-solid fa-tools' },
+      { label: 'Logs Kamar', to: '/logs-kamar', icon: 'fa-solid fa-file-lines' },
     ],
   },
   { label: 'Riwayat Kebersihan', to: '/riwayatpembersihan', icon: 'fa-solid fa-broom'},
