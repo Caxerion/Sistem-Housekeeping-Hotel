@@ -18,7 +18,7 @@ const menuItems = [
   { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },
 ];
 
-function Sidebar({ collapsed, onToggle }) {
+function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -55,7 +55,13 @@ function Sidebar({ collapsed, onToggle }) {
   }, [collapsedPopover.open]);
 
   return (
-    <aside className={`fixed left-0 top-18 bottom-0 bg-blue-600 flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'}`}>
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={onMobileClose} />
+      )}
+
+      <aside className={`fixed left-0 top-18 bottom-0 bg-blue-600 flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       {/* Toggle button */}
       <button
          onClick={() => {
@@ -313,7 +319,8 @@ function Sidebar({ collapsed, onToggle }) {
           )}
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
 
