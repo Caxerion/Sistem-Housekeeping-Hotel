@@ -13,7 +13,7 @@ const menuItems = [
       { label: 'Pembagian Maintenance', to: '/pembagian-maintenance', icon: 'fa-solid fa-tools' },
     ],
   },
-  { label: 'Riwayat Kebersihan', to: '/riwayat-pembersihan', icon: 'fa-solid fa-broom'},
+  { label: 'Riwayat Kebersihan', to: '/riwayatpembersihan', icon: 'fa-solid fa-broom'},
   { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },
 ];
 
