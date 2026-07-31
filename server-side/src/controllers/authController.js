@@ -186,6 +186,7 @@ const login = async (req, res) => {
                 user: {
                     user_id: user.user_id,
                     username: user.username,
+                    email: user.employee_email,
                     employee_name: user.employee_name,
                     employee_position: user.employee_position,
                     current_role: App ? App.role : null,
