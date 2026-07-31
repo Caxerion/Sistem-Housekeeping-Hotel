@@ -65,7 +65,6 @@ function Dashboard() {
     { value: statsData.available, label: 'Kamar Available', colorClass: 'text-green-600' },
     { value: statsData.dirty, label: 'Kamar Dirty', colorClass: 'text-red-500' },
     { value: statsData.cleaning, label: 'Sedang Cleaning', colorClass: 'text-cyan-600' },
-    { value: statsData.available, label: 'Jumlah Kamar Tersedia', colorClass: 'text-green-600' },
     { value: statsData.sedangMaintenance, label: 'Jumlah Kamar Maintenance', colorClass: 'text-amber-500' },
     { value: statsData.staffHadirHariIni, label: 'Jumlah    Staff Aktif', colorClass: 'text-purple-500' },
   ];

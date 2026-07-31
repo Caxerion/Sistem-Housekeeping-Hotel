@@ -5,9 +5,9 @@ const { asyncHandler } = require('../utils/asyncHandler');
 const getAvailableRooms = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(
     `SELECT r.id, r.room_number, rt.name AS room_type
-     FROM rooms r
-     JOIN room_types rt ON rt.id = r.room_type_id
-     WHERE r.status = 'available'
+      FROM rooms r
+      JOIN room_types rt ON rt.id = r.room_type_id
+      WHERE r.occupancy_status = 'available'
      ORDER BY r.room_number`
   );
   res.json({ success: true, data: rows });
@@ -52,7 +52,7 @@ const createSchedule = asyncHandler(async (req, res) => {
     });
   }
 
-  const [roomRows] = await pool.query(`SELECT status FROM rooms WHERE id = ?`, [room_id]);
+  const [roomRows] = await pool.query(`SELECT occupancy_status AS status FROM rooms WHERE id = ?`, [room_id]);
   if (roomRows.length === 0) {
     return res.status(404).json({ success: false, message: 'Kamar tidak ditemukan.' });
   }
