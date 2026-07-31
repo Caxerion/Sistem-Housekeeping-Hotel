@@ -1,14 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Gear = ({ className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
 );
 
+// Menu yang sama persis dengan Sidebar.jsx
+const menuItems = [
+  { label: 'Dashboard', to: '/dashboard', icon: 'fa-solid fa-chart-area' },
+  { label: 'Staff', to: '/staff', icon: 'fa-solid fa-user' },
+  {
+    label: 'Kamar',
+    icon: 'fa-solid fa-bed',
+    children: [
+      { label: 'Status Kamar', to: '/statuskamar', icon: 'fa-solid fa-door-open' },
+      { label: 'Pembagian Maintenance', to: '/pembagian-maintenance', icon: 'fa-solid fa-tools' },
+    ],
+  },
+  { label: 'Riwayat Kebersihan', to: '/riwayat-pembersihan', icon: 'fa-solid fa-broom' },
+  { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },
+];
+
 function Navbar({ pageTitle = 'Housekeeping' }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [mobileOpenDropdown, setMobileOpenDropdown] = useState(null);
   const profileRef = useRef(null);
   const { user, logout } = useAuth();
 
@@ -22,6 +39,14 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const toggleMobileDropdown = (label) => {
+    setMobileOpenDropdown(mobileOpenDropdown === label ? null : label);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    setMobileOpenDropdown(null);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-md">
@@ -101,20 +126,20 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={closeMobileMenu}
         />
       )}
 
       {/* Mobile offcanvas-style panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 shadow-2xl transform transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 shadow-2xl transform transition-transform duration-300 md:hidden flex flex-col ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-         <div className="flex items-center justify-between px-5 h-20 border-b border-gray-100">
+         <div className="flex items-center justify-between px-5 h-20 border-b border-gray-100 shrink-0">
           <h5 className="font-semibold text-gray-800">Grand Nusantara Hotel</h5>
           <button
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={closeMobileMenu}
             className="text-gray-500 p-1"
             aria-label="Tutup menu"
           >
@@ -122,10 +147,82 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
           </button>
         </div>
 
-        <div className="px-5 py-4 flex flex-col gap-1">
+        <div className="flex-1 overflow-y-auto">
+          {/* Menu navigasi (sama seperti Sidebar.jsx) */}
+          <nav className="px-3 py-3 flex flex-col gap-1">
+            {menuItems.map((item) => {
+              if (item.children) {
+                const isOpen = mobileOpenDropdown === item.label;
+                return (
+                  <div key={item.label}>
+                    <button
+                      onClick={() => toggleMobileDropdown(item.label)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <i className={`${item.icon} w-4 text-center text-gray-500`}></i>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      <svg
+                        className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="pl-4">
+                        {item.children.map((child) => (
+                          <NavLink
+                            key={child.to}
+                            to={child.to}
+                            onClick={closeMobileMenu}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                                isActive
+                                  ? 'bg-blue-50 text-blue-600'
+                                  : 'text-gray-600 hover:bg-gray-50'
+                              }`
+                            }
+                          >
+                            <i className={`${child.icon} w-4 text-center`}></i>
+                            <span>{child.label}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={closeMobileMenu}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  <i className={`${item.icon} w-4 text-center text-gray-500`}></i>
+                  <span>{item.label}</span>
+                </NavLink>
+              );
+            })}
+          </nav>
 
           {/* Mobile Profile Section */}
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-2 px-5 pt-4 pb-4 border-t border-gray-100">
             <div className="flex items-center gap-3 px-3 py-2">
               <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-medium">
                 {user?.employee_name?.[0]?.toUpperCase() || 'U'}
@@ -136,7 +233,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
             </div>
             <button
               onClick={() => {
-                setIsMobileMenuOpen(false);
+                closeMobileMenu();
                 logout();
               }}
               className="mt-2 w-full px-3 py-2.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 text-left"

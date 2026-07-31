@@ -1,7 +1,267 @@
-function StatusKamar(){
-    return(
-        <h1>Ini Status Kamar</h1>
-    )
+import { useState, useEffect } from 'react';
+import api from '../services/api';
+
+function formatRupiah(angka) {
+  if (!angka) return '-';
+  return 'Rp ' + Number(angka).toLocaleString('id-ID');
+}
+
+function getFloor(roomNumber) {
+  if (!roomNumber) return '-';
+  return roomNumber.charAt(0);
+}
+
+const statusConfig = {
+  available: { label: 'Available', bg: '#dcfce7', color: '#16a34a' },
+  occupied: { label: 'Occupied', bg: '#fee2e2', color: '#dc2626' },
+  maintenance: { label: 'Maintenance', bg: '#fef3c7', color: '#d97706' },
+  reserved: { label: 'Reserved', bg: '#dbeafe', color: '#2563eb' },
+};
+
+function StatusBadge({ status }) {
+  const config = statusConfig[status] || {
+    label: status,
+    bg: '#f3f4f6',
+    color: '#6b7280',
+  };
+
+  return (
+    <span
+      className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase"
+      style={{ backgroundColor: config.bg, color: config.color }}
+    >
+      {config.label}
+    </span>
+  );
+}
+
+function StatusKamar() {
+  const [rooms, setRooms] = useState([]);
+  const [filter, setFilter] = useState('Semua');
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const filters = ['Semua', 'Available', 'Occupied', 'Maintenance', 'Reserved'];
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await api.get('/rooms');
+        setRooms(res.data.data || []);
+      } catch (err) {
+        console.error('Gagal mengambil data kamar:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  const filteredRooms = rooms.filter((room) => {
+    const matchStatus = filter === 'Semua' || room.status === filter.toLowerCase();
+    const matchSearch =
+      room.room_number?.toLowerCase().includes(search.toLowerCase()) ||
+      room.room_type?.toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchSearch;
+  });
+
+  const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRooms = filteredRooms.slice(startIndex, startIndex + itemsPerPage);
+
+  return (
+    // Wrapper luar: batasi lebar maksimum + margin auto biar center, plus padding horizontal
+    <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-4">
+      {/* Judul halaman */}
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-800">Status Kamar</h1>
+      </div>
+
+      <div
+        className="p-6 rounded-xl border"
+        style={{ backgroundColor: '#f9f9fa', color: '#1f2937', borderColor: '#e5e7eb' }}
+      >
+        {/* Header: filter buttons + search */}
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+          <div className="flex gap-2 flex-wrap">
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => { setFilter(f); setCurrentPage(1); }}
+                className="px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+                style={{
+                  backgroundColor: filter === f ? '#3b82f6' : '#f1f3f5',
+                  color: filter === f ? '#ffffff' : '#4b5563',
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className="flex items-center rounded-full px-3 py-1 border"
+            style={{ backgroundColor: '#ffffff', minWidth: '240px', borderColor: '#e5e7eb' }}
+          >
+            <i
+              className="fa-solid fa-magnifying-glass me-2"
+              style={{ color: '#9ca3af' }}
+            ></i>
+            <input
+              type="text"
+              placeholder="Cari no. kamar..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
+              style={{ color: '#1f2937' }}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        {loading ? (
+          <p style={{ color: '#6b7280' }}>Memuat data kamar...</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    No. Kamar
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    Tipe Kamar
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    Lantai
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    Harga / Malam
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRooms.map((room) => (
+                  <tr key={room.id} style={{ borderColor: '#e5e7eb' }}>
+                    <td
+                      className="py-3 px-4 border-b font-semibold"
+                      style={{ borderColor: '#e5e7eb', color: '#111827' }}
+                    >
+                      {room.room_number}
+                    </td>
+                    <td
+                      className="py-3 px-4 border-b"
+                      style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                    >
+                      {room.room_type}
+                    </td>
+                    <td
+                      className="py-3 px-4 border-b"
+                      style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                    >
+                      {getFloor(room.room_number)}
+                    </td>
+                    <td
+                      className="py-3 px-4 border-b"
+                      style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                    >
+                      {formatRupiah(room.base_price)}
+                    </td>
+                    <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                      <StatusBadge status={room.status} />
+                    </td>
+                  </tr>
+                ))}
+                {paginatedRooms.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="text-center py-4"
+                      style={{ color: '#9ca3af' }}
+                    >
+                      Tidak ada kamar yang cocok.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#f1f3f5',
+                    color: currentPage === 1 ? '#9ca3af' : '#4b5563',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  const isCurrent = page === currentPage;
+                  const isNear = Math.abs(page - currentPage) <= 1;
+                  const isFirst = page === 1;
+                  const isLast = page === totalPages;
+
+                  if (!isNear && !isFirst && !isLast) {
+                    if (page === currentPage - 2 || page === currentPage + 2) {
+                      return (
+                        <span
+                          key={page}
+                          className="px-2 py-1 text-sm"
+                          style={{ color: '#9ca3af' }}
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: isCurrent ? '#3b82f6' : '#f1f3f5',
+                        color: isCurrent ? '#ffffff' : '#4b5563',
+                      }}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#f1f3f5',
+                    color: currentPage === totalPages ? '#9ca3af' : '#4b5563',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default StatusKamar;
