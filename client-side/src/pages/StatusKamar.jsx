@@ -18,6 +18,12 @@ const statusConfig = {
   reserved: { label: 'Reserved', bg: '#dbeafe', color: '#2563eb' },
 };
 
+const housekeepingConfig = {
+  clean: { label: "Clean", bg: "#dcfce7", color: "#16a34a" },
+  dirty: { label: "Dirty", bg: "#fee2e2", color: "#dc2626" },
+  cleaning: { label: "Cleaning", bg: "#fef3c7", color: "#d97706" },
+};
+
 function StatusBadge({ status }) {
   const config = statusConfig[status] || {
     label: status,
@@ -29,6 +35,26 @@ function StatusBadge({ status }) {
     <span
       className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase"
       style={{ backgroundColor: config.bg, color: config.color }}
+    >
+      {config.label}
+    </span>
+  );
+}
+
+function HousekeepingBadge({ status }) {
+  const config = housekeepingConfig[status] || {
+    label: status,
+    bg: "#f3f4f6",
+    color: "#6b7280",
+  };
+
+  return (
+    <span
+      className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase"
+      style={{
+        backgroundColor: config.bg,
+        color: config.color,
+      }}
     >
       {config.label}
     </span>
@@ -60,7 +86,7 @@ function StatusKamar() {
   }, []);
 
   const filteredRooms = rooms.filter((room) => {
-    const matchStatus = filter === 'Semua' || room.status === filter.toLowerCase();
+    const matchStatus = filter === 'Semua' || room.occupancy_status === filter.toLowerCase();
     const matchSearch =
       room.room_number?.toLowerCase().includes(search.toLowerCase()) ||
       room.room_type?.toLowerCase().includes(search.toLowerCase());
@@ -143,6 +169,9 @@ function StatusKamar() {
                   <th className="text-left py-3 px-4 font-medium text-uppercase">
                     Status
                   </th>
+                  <th className="text-left py-3 px-4 font-medium text-uppercase">
+                    Housekeeping
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -173,14 +202,17 @@ function StatusKamar() {
                       {formatRupiah(room.base_price)}
                     </td>
                     <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
-                      <StatusBadge status={room.status} />
+                      <StatusBadge status={room.occupancy_status} />
+                    </td>
+                    <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                      <HousekeepingBadge status={room.housekeeping_status} />
                     </td>
                   </tr>
                 ))}
                 {paginatedRooms.length === 0 && (
                   <tr>
                     <td
-                      colSpan="5"
+                      colSpan="6"
                       className="text-center py-4"
                       style={{ color: '#9ca3af' }}
                     >

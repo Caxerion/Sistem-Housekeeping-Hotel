@@ -7,11 +7,19 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   );
 
   const [availableRows] = await pool.query(
-    `SELECT COUNT(*) AS total FROM rooms WHERE status = 'available'`
+    `SELECT COUNT(*) AS total FROM rooms WHERE occupancy_status = 'available'`
+  );
+
+  const [dirtyRows] = await pool.query(
+    `SELECT COUNT(*) AS total FROM rooms WHERE housekeeping_status='dirty'`
+  );
+
+  const [cleaningRows] = await pool.query(
+    `SELECT COUNT(*) AS total FROM rooms WHERE housekeeping_status='cleaning'`
   );
 
   const [maintenanceRows] = await pool.query(
-    `SELECT COUNT(*) AS total FROM rooms WHERE status = 'maintenance'`
+    `SELECT COUNT(*) AS total FROM rooms WHERE occupancy_status = 'maintenance'`
   );
 
   const [staffRows] = await pool.query(
@@ -23,6 +31,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const stats = {
     totalKamar: totalRows[0].total,
     available: availableRows[0].total,
+    dirty: dirtyRows[0].total,
+    cleaning: cleaningRows[0].total,
     sedangMaintenance: maintenanceRows[0].total,
     staffHadirHariIni: staffRows[0].total,
   };

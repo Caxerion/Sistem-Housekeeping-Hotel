@@ -54,12 +54,17 @@ function Dashboard() {
   const statsData = stats || {
     totalKamar: 0,
     available: 0,
+    dirty: 0,
+    cleaning: 0,
     sedangMaintenance: 0,
     staffHadirHariIni: 0,
   };
 
   const statsCards = [
     { value: statsData.totalKamar, label: 'Total Kamar', colorClass: 'text-blue-600' },
+    { value: statsData.available, label: 'Kamar Available', colorClass: 'text-green-600' },
+    { value: statsData.dirty, label: 'Kamar Dirty', colorClass: 'text-red-500' },
+    { value: statsData.cleaning, label: 'Sedang Cleaning', colorClass: 'text-cyan-600' },
     { value: statsData.available, label: 'Jumlah Kamar Tersedia', colorClass: 'text-green-600' },
     { value: statsData.sedangMaintenance, label: 'Jumlah Kamar Maintenance', colorClass: 'text-amber-500' },
     { value: statsData.staffHadirHariIni, label: 'Jumlah    Staff Aktif', colorClass: 'text-purple-500' },
@@ -78,7 +83,7 @@ function Dashboard() {
       {loading ? (
         <p className="text-gray-400">Memuat data...</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
           {statsCards.map((stat) => (
             <StatCard
               key={stat.label}
