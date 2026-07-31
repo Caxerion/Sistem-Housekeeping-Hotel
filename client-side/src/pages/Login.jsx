@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 
@@ -87,6 +87,12 @@ export default function Login() {
         <p className="mt-4 text-xs text-gray-500 leading-relaxed">
           Login memvalidasi ke tabel <b>users</b>, lalu menampilkan nama &amp; role
           dari <b>employees</b> + <b>positions</b>.
+        </p>
+        <p className="mt-3 text-center text-sm text-gray-500">
+          Belum punya akun?{' '}
+          <Link to="/register" className="font-medium text-blue-600 hover:underline">
+            Daftar
+          </Link>
         </p>
       </div>
     </div>

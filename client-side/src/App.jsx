@@ -10,6 +10,7 @@ import PembagianMaintenance from "./pages/PembagianMaintenance";
 import LogsKamar from "./pages/LogsKamar";
 import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Staff from './pages/Staff';
 
 function App () {
@@ -39,6 +40,7 @@ function App () {
     return(
         <Routes>
             <Route path="/login" element={<Login/>}/>
+            <Route path="/register" element={<Register/>}/>
             <Route path="/dashboard" element={routeLayout('Dashboard', <Dashboard/>)}/>
             <Route path="/" element={routeLayout('Dashboard', <Dashboard/>)}/>
             <Route path="/staff" element={routeLayout('Staff', <Staff/>)}/>
