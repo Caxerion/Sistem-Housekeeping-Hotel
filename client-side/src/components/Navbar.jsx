@@ -79,10 +79,10 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                   {user?.employee_name?.[0]?.toUpperCase() || 'U'}
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="text-sm font-medium text-white truncate max-w-[60px] group-hover:max-w-[200px] transition-all duration-800">
+                  <span className={`text-sm font-medium text-white truncate group-hover:max-w-[200px] transition-all duration-700 ${isUserMenuOpen ? 'max-w-[200px]' : 'max-w-[60px]'}`}>
                     {user?.username || 'User'}
                   </span>
-                  <span className="text-xs text-white/70 truncate max-w-[60px] group-hover:max-w-[200px] group-hover:underline transition-all duration-800">
+                  <span className={`text-xs text-white/70 truncate group-hover:max-w-[200px] group-hover:underline transition-all duration-700 ${isUserMenuOpen ? 'max-w-[200px] underline' : 'max-w-[60px]'}`}>
                     {user?.email || '-'}
                   </span>
                 </div>
@@ -101,7 +101,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                   onClick={() => setIsUserMenuOpen(false)}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                 >
-                  <i className="fa-solid fa-user w-4 text-center text-gray-500"></i> View Profile
+                  <i className="fa-solid fa-user w-4 text-center text-gray-500"></i> Lihat Profil
                 </Link>
                 <button
                   onClick={() => {
@@ -128,7 +128,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-100 py-1">
                   <Link
-                    to="/repository"
+                    to=""
                     onClick={() => setIsProfileOpen(false)}
                     className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >

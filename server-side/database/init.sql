@@ -254,6 +254,16 @@ CREATE TABLE IF NOT EXISTS room_maintenance_schedule (
 );
 
 
+CREATE TABLE IF NOT EXISTS room_maintenance_schedule_staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (schedule_id) REFERENCES room_maintenance_schedule(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
+    CONSTRAINT unique_schedule_staff UNIQUE (schedule_id, employee_id)
+);
+
 -- =============== ===
 --  MODUL INVENTORY ===
 -- =============== ===

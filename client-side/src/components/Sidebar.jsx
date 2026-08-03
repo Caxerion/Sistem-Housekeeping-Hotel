@@ -61,7 +61,7 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={onMobileClose} />
       )}
 
-      <aside className={`fixed left-0 top-18 bottom-0 bg-blue-600 flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`fixed left-0 top-18 bottom-0 bg-blue-600 rounded-r-xl flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       {/* Toggle button */}
       <button
          onClick={() => {
