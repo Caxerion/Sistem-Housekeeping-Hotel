@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const AuthContext = createContext(null);
 
@@ -43,19 +44,28 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-        await fetch('http://localhost:3000/api/auth/logout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-        });
+      await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
     } catch (err) {
-        console.error('Logout error:', err);
+      console.error('Logout error:', err);
     } finally {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
-        navigate('/login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
     }
-};
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Logout Berhasil',
+      text: 'Anda telah keluar dari akun, See ya Bro!',
+      timer: 1500,
+      showConfirmButton: false,
+    }).then(() => {
+      navigate('/login');
+    });
+  };
   return (
     <AuthContext.Provider value={{ user, login, logout, loading, error, setError }}>
       {children}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import Swal from 'sweetalert2';
 
 function RiwayatPembersihan() {
   const [logs, setLogs] = useState([]);
@@ -20,20 +21,36 @@ function RiwayatPembersihan() {
     fetchCleaningHistory();
   }, []);
 
-  //Fungsi menghapus riwayat pembersihan
   const handleDeleteAll = async () => {
-    const confirmDelete = window.confirm("Apakah ingin menghapus seluruh Riwayat? Tindakan ini tidak dapat dibatalkan");
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Hapus Semua Riwayat?',
+      text: 'Tindakan ini tidak dapat dibatalkan.',
+      showConfirmButton: true,
+      confirmButtonText: 'Hapus',
+      cancelButtonText: 'Batal',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+    });
 
-    if (!confirmDelete) return;
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete('/maintenance/history');
-
       setLogs([]);
-      alert("Seluruh riwayat berhasil dihapus");
-    } catch (err) {
-      console.log('Gagal menghapus riwayat pembersihan', err);
-      alert("Gagal menghapus riwayat. Silahkan coba lagi");
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: 'Seluruh riwayat berhasil dihapus.',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch {
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: 'Gagal menghapus riwayat. Silahkan coba lagi.',
+      });
     }
   };
 
