@@ -26,19 +26,70 @@ const getHousekeepingStaff = asyncHandler(async (req, res) => {
 });
 
 // GET /api/room-schedule
+// Menampilkan SEMUA kamar (urut room_number 101 -> 550), digabung dengan
+// histori jadwal maintenance-nya:
+//   - Kamar yang PERNAH dijadwalkan -> tetap muncul SEMUA barisnya (histori),
+//     jadi 1 kamar bisa muncul lebih dari sekali kalau pernah dimaintenance
+//     berkali-kali.
+//   - Kamar yang BELUM PERNAH dijadwalkan sama sekali -> muncul 1 baris
+//     kosong (title/tanggal/petugas/status = null), supaya semua kamar
+//     tetap kelihatan di tabel.
 const getAllSchedules = asyncHandler(async (req, res) => {
-  const [rows] = await pool.query(
-    `SELECT
-        rms.id, rms.room_id, r.room_number AS no_kamar, rms.title, rms.notes,
-        e.full_name AS dijadwalkan_oleh, rms.scheduled_date, rms.status,
-        rms.started_at, rms.completed_at
-     FROM room_maintenance_schedule rms
-     JOIN rooms r ON r.id = rms.room_id
-     JOIN employees e ON e.id = rms.scheduled_by
-     ORDER BY rms.scheduled_date DESC`
-  );
+  const [rows] = await pool.query(`
+    SELECT * FROM (
+      SELECT
+          rms.id AS schedule_id,
+          r.id AS room_id,
+          r.room_number AS no_kamar,
+          r.housekeeping_status,
+          rms.title,
+          rms.notes,
+          e.full_name AS dijadwalkan_oleh,
+          rms.scheduled_date,
+          rms.status,
+          rms.started_at,
+          rms.completed_at,
+          rms.updated_at,
+          ROW_NUMBER() OVER (
+              PARTITION BY r.id
+              ORDER BY 
+                  CASE rms.status
+                      WHEN 'in_progress' THEN 1
+                      WHEN 'scheduled' THEN 2
+                      WHEN 'completed' THEN 3
+                      WHEN 'canceled' THEN 4
+                      ELSE 5
+                  END,
+                  rms.scheduled_date DESC
+          ) AS rn
+      FROM room_maintenance_schedule rms
+      JOIN rooms r ON r.id = rms.room_id
+      JOIN employees e ON e.id = rms.scheduled_by
 
-  const scheduleIds = rows.map((r) => r.id);
+      UNION ALL
+
+      SELECT
+          NULL AS schedule_id,
+          r.id AS room_id,
+          r.room_number AS no_kamar,
+          r.housekeeping_status,
+          NULL AS title,
+          NULL AS notes,
+          NULL AS dijadwalkan_oleh,
+          NULL AS scheduled_date,
+          NULL AS status,
+          NULL AS started_at,
+          NULL AS completed_at,
+          NULL AS updated_at,
+          1 AS rn
+      FROM rooms r
+      WHERE r.id NOT IN (SELECT DISTINCT room_id FROM room_maintenance_schedule)
+    ) combined
+    WHERE rn = 1
+    ORDER BY no_kamar ASC, scheduled_date DESC
+  `);
+
+  const scheduleIds = rows.map((r) => r.schedule_id).filter(Boolean);
   let staffMap = {};
 
   if (scheduleIds.length > 0) {
@@ -57,7 +108,8 @@ const getAllSchedules = asyncHandler(async (req, res) => {
 
   const data = rows.map((r) => ({
     ...r,
-    assigned_staff: staffMap[r.id] || [],
+    id: r.schedule_id, // dipakai frontend untuk key & aksi (null kalau belum dijadwalkan)
+    assigned_staff: r.schedule_id ? staffMap[r.schedule_id] || [] : [],
   }));
 
   res.json({ success: true, data });
@@ -147,8 +199,10 @@ const createSchedule = asyncHandler(async (req, res) => {
     const scheduleId = result.insertId;
 
     if (initialStatus === 'in_progress') {
+      // occupancy_status -> maintenance, DAN housekeeping_status -> cleaning
+      // (selama maintenance berlangsung, dianggap "Sedang Cleaning" di dashboard)
       await connection.query(
-        `UPDATE rooms SET occupancy_status = 'maintenance' WHERE id = ?`,
+        `UPDATE rooms SET occupancy_status = 'maintenance', housekeeping_status = 'cleaning' WHERE id = ?`,
         [room_id]
       );
     }
@@ -198,8 +252,9 @@ const startSchedule = asyncHandler(async (req, res) => {
     [id]
   );
 
+  // occupancy_status -> maintenance, housekeeping_status -> cleaning
   await pool.query(
-    `UPDATE rooms SET occupancy_status = 'maintenance' WHERE id = ?`,
+    `UPDATE rooms SET occupancy_status = 'maintenance', housekeeping_status = 'cleaning' WHERE id = ?`,
     [scheduleRows[0].room_id]
   );
 
@@ -234,8 +289,11 @@ const completeSchedule = asyncHandler(async (req, res) => {
   );
 
   if (activeSchedules[0].count === 0) {
+    // Maintenance beneran selesai (nggak ada jadwal aktif lain nempel di kamar ini):
+    // occupancy_status -> available, housekeeping_status -> clean (BUKAN dirty,
+    // karena 'dirty' itu khusus jalur checkout tamu, bukan dari maintenance).
     await pool.query(
-      `UPDATE rooms SET occupancy_status = 'available' WHERE id = ?`,
+      `UPDATE rooms SET occupancy_status = 'available', housekeeping_status = 'clean' WHERE id = ?`,
       [roomId]
     );
   }
@@ -265,6 +323,9 @@ const cancelSchedule = asyncHandler(async (req, res) => {
     [id]
   );
 
+  // Catatan: cancel cuma bisa dilakukan selagi status masih 'scheduled' (belum
+  // pernah 'in_progress'), jadi housekeeping_status kamar itu belum pernah
+  // ikut diubah jadi 'cleaning' -> tidak perlu direset di sini.
   const [activeSchedules] = await pool.query(
     `SELECT COUNT(*) AS count FROM room_maintenance_schedule WHERE room_id = ? AND status IN ('scheduled', 'in_progress')`,
     [roomId]
