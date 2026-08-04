@@ -19,7 +19,7 @@ const menuItems = [
       { label: 'Logs Kamar', to: '/logs-kamar', icon: 'fa-solid fa-file-lines' },
     ],
   },
-  { label: 'Riwayat Kebersihan', to: '/riwayat-pembersihan', icon: 'fa-solid fa-broom' },
+  { label: 'Riwayat Kebersihan', to: '/RiwayatPembersihan', icon: 'fa-solid fa-broom' },
   { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },
 ];
 

@@ -17,7 +17,7 @@ function Inventory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Semua');
 
-  //NANTI KALO BACKEND DAH READY, HAPUS DUMMY_INVENTORY trus useEffect nya di pake yak
+  //Hapus DUMMY_INVENTORY trus useEffect yg di bawah nya di pake
   /*
   useEffect(() => {
     const fetchInventory = async () => {
@@ -50,9 +50,6 @@ function Inventory() {
           <h1 className="text-2xl font-bold text-gray-800">Daftar Inventory</h1>
           <p className="text-sm text-gray-500 mt-1">Kelola stok dan perlengkapan hotel</p>
         </div>
-        <span className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">
-          Dummy Mode
-        </span>
       </div>
 
       {/* Filter & Search Bar */}
