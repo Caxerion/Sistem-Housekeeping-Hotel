@@ -6,6 +6,7 @@ const roomScheduleRoutes = require('./src/routes/roomScheduleRoutes');
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const roomTypeRoutes = require('./src/routes/roomTypeRoutes');
 const roomLogsRoutes = require('./src/routes/roomLogsRoutes');
+const maintenanceHistoryRoutes = require('./src/routes/maintenanceHistoryRoutes');
 const PORT = 3000;
 
 app.use(cors({
@@ -25,6 +26,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/room-schedule', roomScheduleRoutes);
 app.use('/api/room-types', roomTypeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/maintenance', require('./src/routes/maintenanceHistoryRoutes'));
 app.use('/api/room-logs', roomLogsRoutes);
 
 app.listen(PORT, () => {

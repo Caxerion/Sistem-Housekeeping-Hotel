@@ -44,6 +44,28 @@ function HousekeepingBadge({ status }) {
   );
 }
 
+// Menghasilkan daftar token halaman: angka biasa, atau penanda ellipsis
+// ('ellipsis-left' / 'ellipsis-right') yang nanti dirender jadi input angka.
+function buildPageTokens(current, total) {
+  const delta = 1;
+  const tokens = [1];
+
+  const rangeStart = Math.max(2, current - delta);
+  const rangeEnd = Math.min(total - 1, current + delta);
+
+  if (rangeStart > 2) tokens.push('ellipsis-left');
+
+  for (let page = rangeStart; page <= rangeEnd; page++) {
+    tokens.push(page);
+  }
+
+  if (rangeEnd < total - 1) tokens.push('ellipsis-right');
+
+  if (total > 1) tokens.push(total);
+
+  return tokens;
+}
+
 const initialForm = {
   room_id: '',
   title: '',
@@ -66,6 +88,13 @@ function PembagianMaintenance() {
 
   const [staffDropdownOpen, setStaffDropdownOpen] = useState(false);
   const staffDropdownRef = useRef(null);
+
+  // Search & pagination
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editingEllipsis, setEditingEllipsis] = useState(null); // 'ellipsis-left' | 'ellipsis-right' | null
+  const [pageInput, setPageInput] = useState('');
+  const itemsPerPage = 10;
 
   const fetchAll = async () => {
     try {
@@ -118,6 +147,46 @@ function PembagianMaintenance() {
     }
     return sched;
   });
+
+  // Filter berdasarkan search: cocokkan nomor kamar atau nama petugas yang ditugaskan
+  const filteredSchedules = visibleSchedules.filter((sched) => {
+    if (!search.trim()) return true;
+    const keyword = search.toLowerCase();
+    const matchRoom = sched.no_kamar?.toLowerCase().includes(keyword);
+    const matchStaff =
+      Array.isArray(sched.assigned_staff) &&
+      sched.assigned_staff.some((name) => name?.toLowerCase().includes(keyword));
+    return matchRoom || matchStaff;
+  });
+
+  const totalPages = Math.ceil(filteredSchedules.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedSchedules = filteredSchedules.slice(startIndex, startIndex + itemsPerPage);
+
+  const pageTokens = buildPageTokens(currentPage, totalPages);
+
+  function openEllipsisInput(token) {
+    setEditingEllipsis(token);
+    setPageInput('');
+  }
+
+  function submitPageInput() {
+    const target = parseInt(pageInput, 10);
+    if (!isNaN(target) && target >= 1 && target <= totalPages) {
+      setCurrentPage(target);
+    }
+    setEditingEllipsis(null);
+    setPageInput('');
+  }
+
+  function handlePageInputKeyDown(e) {
+    if (e.key === 'Enter') {
+      submitPageInput();
+    } else if (e.key === 'Escape') {
+      setEditingEllipsis(null);
+      setPageInput('');
+    }
+  }
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -492,7 +561,28 @@ function PembagianMaintenance() {
         className="p-6 rounded-xl border"
         style={{ backgroundColor: '#f9f9fa', borderColor: '#e5e7eb' }}
       >
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Daftar Jadwal Maintenance</h2>
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+          <h2 className="text-lg font-semibold text-gray-800">Daftar Jadwal Maintenance</h2>
+
+          <div
+            className="flex items-center rounded-full px-3 py-1 border"
+            style={{ backgroundColor: '#ffffff', minWidth: '240px', borderColor: '#e5e7eb' }}
+          >
+            <i
+              className="fa-solid fa-magnifying-glass me-2"
+              style={{ color: '#9ca3af' }}
+            ></i>
+            <input
+              type="text"
+              placeholder="Cari nama petugas / no. kamar..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
+              style={{ color: '#1f2937' }}
+            />
+          </div>
+        </div>
+
         {loading ? (
           <p style={{ color: '#6b7280' }}>Memuat data...</p>
         ) : (
@@ -510,14 +600,14 @@ function PembagianMaintenance() {
                 </tr>
               </thead>
                 <tbody>
-                  {visibleSchedules.length === 0 ? (
+                  {paginatedSchedules.length === 0 ? (
                     <tr>
                       <td colSpan="7" className="text-center py-4" style={{ color: '#9ca3af' }}>
-                        Belum ada jadwal maintenance.
+                        {search.trim() ? 'Tidak ada jadwal yang cocok.' : 'Belum ada jadwal maintenance.'}
                       </td>
                     </tr>
                   ) : (
-                    visibleSchedules.map((sched, idx) => (
+                    paginatedSchedules.map((sched, idx) => (
                     <tr key={sched.id ?? `empty-${sched.room_id}-${idx}`} style={{ borderColor: '#e5e7eb' }}>
                       <td
                         className="py-3 px-4 border-b font-semibold"
@@ -598,6 +688,90 @@ function PembagianMaintenance() {
                 )}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-5">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#f1f3f5',
+                    color: currentPage === 1 ? '#9ca3af' : '#4b5563',
+                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+
+                {pageTokens.map((token, idx) => {
+                  // Token angka biasa -> tombol nomor halaman
+                  if (typeof token === 'number') {
+                    const isCurrent = token === currentPage;
+                    return (
+                      <button
+                        key={token}
+                        onClick={() => setCurrentPage(token)}
+                        className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                        style={{
+                          backgroundColor: isCurrent ? '#3b82f6' : '#f1f3f5',
+                          color: isCurrent ? '#ffffff' : '#4b5563',
+                        }}
+                      >
+                        {token}
+                      </button>
+                    );
+                  }
+
+                  // Token ellipsis yang lagi diklik -> ganti jadi input angka
+                  if (editingEllipsis === token) {
+                    return (
+                      <input
+                        key={`${token}-input`}
+                        type="number"
+                        min={1}
+                        max={totalPages}
+                        autoFocus
+                        value={pageInput}
+                        onChange={(e) => setPageInput(e.target.value)}
+                        onKeyDown={handlePageInputKeyDown}
+                        onBlur={submitPageInput}
+                        placeholder="No."
+                        className="w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none"
+                        style={{ borderColor: '#3b82f6', color: '#1f2937' }}
+                      />
+                    );
+                  }
+
+                  // Token ellipsis biasa -> "..." yang bisa diklik
+                  return (
+                    <button
+                      key={`${token}-${idx}`}
+                      onClick={() => openEllipsisInput(token)}
+                      title="Klik untuk lompat ke halaman tertentu"
+                      className="px-2 py-1 text-sm rounded-md hover:bg-gray-100 transition-colors"
+                      style={{ color: '#9ca3af' }}
+                    >
+                      ...
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  style={{
+                    backgroundColor: '#f1f3f5',
+                    color: currentPage === totalPages ? '#9ca3af' : '#4b5563',
+                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

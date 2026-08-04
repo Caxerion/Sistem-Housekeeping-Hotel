@@ -1,53 +1,16 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 
-const dummyDatabase = [
-  {
-    id: 1,
-    room_number: '101',
-    room_type: 'Deluxe Room',
-    employee_name: 'Budi Santoso',
-    action_note: 'Ganti seprei, sedot debu, isi ulang sabun & sampo mandi.',
-    cleaned_at: '2026-08-03T09:30:00Z',
-  },
-  {
-    id: 2,
-    room_number: '102',
-    room_type: 'Standard Room',
-    employee_name: 'Siti Rahma',
-    action_note: 'Pembersihan rutin, sanitasi gagang pintu dan remote TV.',
-    cleaned_at: '2026-08-03T10:15:00Z',
-  },
-  {
-    id: 3,
-    room_number: '201',
-    room_type: 'Suite Room',
-    employee_name: 'Budi Santoso',
-    action_note: 'Ganti handuk mandi, pel lantai, semprot cairan disinfektan.',
-    cleaned_at: '2026-08-03T11:00:00Z',
-  },
-  {
-    id: 4,
-    room_number: '105',
-    room_type: 'Standard Room',
-    employee_name: 'Ahmad Fauzi',
-    action_note: 'Restock perlengkapan toiletries & perbaiki posisi cermin.',
-    cleaned_at: '2026-08-02T15:45:00Z',
-  },
-];
-
 function RiwayatPembersihan() {
-  const [logs, setLogs] = useState(dummyDatabase);
-  const [loading, setLoading] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  //Hapus dummyDatabase dan aktifin useEffect yg di bawah
-  /*
   useEffect(() => {
     const fetchCleaningHistory = async () => {
       try {
         const res = await api.get('/maintenance/history');
-        setLogs(res.data.data || res.data);
+        setLogs(res.data.data || []);
       } catch (err) {
         console.error('Gagal mengambil riwayat pembersihan:', err);
       } finally {
@@ -56,14 +19,30 @@ function RiwayatPembersihan() {
     };
     fetchCleaningHistory();
   }, []);
-  */
+
+  //Fungsi menghapus riwayat pembersihan
+  const handleDeleteAll = async () => {
+    const confirmDelete = window.confirm("Apakah ingin menghapus seluruh Riwayat? Tindakan ini tidak dapat dibatalkan");
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete('/maintenance/history');
+
+      setLogs([]);
+      alert("Seluruh riwayat berhasil dihapus");
+    } catch (err) {
+      console.log('Gagal menghapus riwayat pembersihan', err);
+      alert("Gagal menghapus riwayat. Silahkan coba lagi");
+    }
+  };
 
   // Filter log berdasarkan nomor kamar, nama petugas, atau catatan
   const filteredLogs = logs.filter((log) => {
     const query = searchQuery.toLowerCase();
     return (
-      log.room_number.toLowerCase().includes(query) ||
-      log.employee_name.toLowerCase().includes(query) ||
+      log.room_number?.toLowerCase().includes(query) ||
+      log.employee_name?.toLowerCase().includes(query) ||
       (log.action_note && log.action_note.toLowerCase().includes(query))
     );
   });
@@ -104,7 +83,23 @@ function RiwayatPembersihan() {
       </div>
 
       {/* Logs List Container */}
-      <p className="text-lg font-light text-gray-400 mb-2">Daftar Aktivitas Log</p>
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-lg font-light text-gray-400">Daftar Aktivitas Log</p>
+        <div className="flex justify-end">
+          <button
+            onClick={handleDeleteAll}
+            disabled={logs.length === 0}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm
+              ${logs.length === 0
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 border border-red-200'
+              }`}
+          >
+            <i className="fa-regular fa-trash-can text-base"></i>
+            Hapus Semua Riwayat
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <p className="text-gray-400">Memuat riwayat pembersihan...</p>
@@ -131,7 +126,7 @@ function RiwayatPembersihan() {
                     </span>
                   </div>
                   <span className="text-xs text-gray-400">
-                    🕒 {formatDateTime(log.cleaned_at)}
+                    <i class="fa-regular fa-clock"></i> {formatDateTime(log.cleaned_at)}
                   </span>
                 </div>
 
