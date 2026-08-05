@@ -250,10 +250,8 @@ function PembagianMaintenance() {
           showConfirmButton: false,
         });
         closeModal();
-        // Refresh semua data: kamar available berkurang, dan baris kosong di
-        // tabel yang tadinya "Belum Dijadwalkan" untuk kamar ini otomatis
-        // ke-switch jadi terisi (judul/tanggal/petugas/status).
         fetchAll();
+        window.dispatchEvent(new Event('refresh-dashboard-trend'));
       }
     } catch (err) {
       const message = err.response?.data?.message || 'Gagal membuat jadwal maintenance.';
