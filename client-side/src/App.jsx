@@ -12,6 +12,8 @@ import Inventory from "./pages/Inventory";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Staff from './pages/Staff';
+import EndAttendance from './pages/Endattendance';
+import AbsensiLogs from './pages/AbsensiLogs';
 
 function App () {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -49,7 +51,9 @@ function App () {
             <Route path="/riwayatpembersihan" element={routeLayout('Riwayat Pembersihan', <RiwayatPembersihan/>)}/>
             <Route path="/pembagian-maintenance" element={routeLayout('Pembagian Maintenance', <PembagianMaintenance/>)}/>
             <Route path="/inventory" element={routeLayout('Inventory', <Inventory/>)}/>
-            <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
+             <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
+             <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>
+             <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
         </Routes>
     )
 }

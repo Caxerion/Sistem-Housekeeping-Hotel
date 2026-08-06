@@ -314,3 +314,28 @@ CREATE TABLE IF NOT EXISTS inventory_stock_logs (
     INDEX idx_stock_log_date (created_at)
 );
 
+
+-- =====================================================================
+-- TAMBAHAN: SISTEM ABSENSI (Check-in / Check-out / Izin)
+-- Versi disederhanakan: foto disimpan sebagai JSON array di kolom `photos`,
+-- bukan tabel terpisah.
+-- =====================================================================
+
+-- Satu baris = satu sesi absen (dari check-in sampai check-out/izin)
+CREATE TABLE IF NOT EXISTS attendance (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    employee_id   INT NOT NULL,
+    check_in_at   DATETIME NOT NULL,
+    check_out_at  DATETIME NULL,
+    status        ENUM('active', 'completed', 'izin') NOT NULL DEFAULT 'active',
+    -- 'active'    = sudah check-in, belum check-out (staff jadi 'standby')
+    -- 'completed' = sudah check-out normal (isi catatan + foto)
+    -- 'izin'      = staff izin (isi alasan izin, tanpa foto)
+    notes         TEXT NULL,          -- catatan wajib saat check-out normal
+    photos        JSON NULL,          -- array of string, contoh: ["/uploads/attendance/a.jpg", "/uploads/attendance/b.jpg"]
+    izin_reason   TEXT NULL,          -- alasan wajib kalau status = 'izin'
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
+    INDEX idx_attendance_employee (employee_id),
+    INDEX idx_attendance_checkin (check_in_at)
+);

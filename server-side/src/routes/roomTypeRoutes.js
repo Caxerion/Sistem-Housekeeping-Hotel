@@ -4,7 +4,7 @@ const { getRoomTypes } = require('../controllers/roomTypeController');
 const { verifyToken, verifyRole } = require('../middlewares/auth');
 
 router.use(verifyToken);
-router.use(verifyRole(['admin']));
+router.use(verifyRole(['admin', 'staff']));
 
 router.get('/', getRoomTypes);
 

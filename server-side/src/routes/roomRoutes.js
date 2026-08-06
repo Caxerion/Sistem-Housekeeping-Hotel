@@ -4,7 +4,7 @@ const { getAllRooms, updateRoom } = require('../controllers/roomController');
 const { verifyToken, verifyRole } = require('../middlewares/auth');
 
 router.use(verifyToken);
-router.use(verifyRole(['admin']));
+router.use(verifyRole(['admin', 'staff']));
 
 router.get('/', getAllRooms);
 router.put('/:id', updateRoom);
