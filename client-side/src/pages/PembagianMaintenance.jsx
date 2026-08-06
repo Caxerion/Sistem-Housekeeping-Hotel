@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
@@ -76,6 +77,7 @@ const initialForm = {
 };
 
 function PembagianMaintenance() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [schedules, setSchedules] = useState([]);
@@ -365,12 +367,14 @@ function PembagianMaintenance() {
           <p className="text-gray-500 mt-2">Jadwalkan dan kelola maintenance kamar.</p>
         </div>
 
-        <button
-          onClick={openModal}
-          className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <span className="text-lg leading-none">+</span> Tambah Maintenance
-        </button>
+        {user?.current_role === 'admin' && (
+          <button
+            onClick={openModal}
+            className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <span className="text-lg leading-none">+</span> Tambah Maintenance
+          </button>
+        )}
       </div>
 
       {/* ===== MODAL: Buat Jadwal Maintenance ===== */}

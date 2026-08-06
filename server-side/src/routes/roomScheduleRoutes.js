@@ -9,9 +9,10 @@ const {
     completeSchedule,
     cancelSchedule,
 } = require('../controllers/roomScheduleController');
-const { verifyToken } = require('../middlewares/auth');
+const { verifyToken, verifyRole } = require('../middlewares/auth');
 
 router.use(verifyToken);
+router.use(verifyRole(['admin', 'staff']));
 
 router.get('/rooms-available', getAvailableRooms);
 router.get('/staff', getHousekeepingStaff);

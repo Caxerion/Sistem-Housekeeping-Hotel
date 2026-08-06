@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const staffOverviewController = require('../controllers/staffOverviewController');
-const { verifyToken } = require('../middlewares/auth');
+const { verifyToken, verifyRole } = require('../middlewares/auth');
 
 // Get staff overview
-router.use(verifyToken); // Middleware to verify token for authentication
+router.use(verifyToken);
+router.use(verifyRole(['admin', 'staff']));
 
 router.get('/overview', staffOverviewController.getStaffOverview);
 
