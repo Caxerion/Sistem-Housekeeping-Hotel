@@ -130,7 +130,7 @@ function Dashboard() {
           </div>
           <div className="bg-white rounded-2xl shadow p-6">
             <div className="text-3xl font-bold text-purple-500">{statsData.staffHadirHariIni}</div>
-            <div className="text-sm text-gray-500 mt-1">Jumlah Staff Aktif</div>
+            <div className="text-sm text-gray-500 mt-1">Jumlah Staff Hadir</div>
           </div>
 
           <div className="bg-white rounded-2xl shadow p-6">

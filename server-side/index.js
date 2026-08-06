@@ -7,6 +7,7 @@ const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const roomTypeRoutes = require('./src/routes/roomTypeRoutes');
 const roomLogsRoutes = require('./src/routes/roomLogsRoutes');
 const maintenanceHistoryRoutes = require('./src/routes/maintenanceHistoryRoutes');
+const staffOverviewRoutes = require('./src/routes/staffOverviewRoutes');
 const PORT = 3000;
 
 app.use(cors({
@@ -28,6 +29,7 @@ app.use('/api/room-types', roomTypeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/maintenance', require('./src/routes/maintenanceHistoryRoutes'));
 app.use('/api/room-logs', roomLogsRoutes);
+app.use('/api/staff', staffOverviewRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
