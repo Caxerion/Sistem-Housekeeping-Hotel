@@ -21,6 +21,12 @@ const getStaffOverview = asyncHandler(async (req, res) => {
                 AND DATE(att.check_in_at) = CURDATE()
                 AND att.status = 'active'
           ) THEN 'standby'
+          WHEN EXISTS (
+              SELECT 1 FROM attendance att
+              WHERE att.employee_id = e.id
+                AND att.status = 'izin'
+                AND att.izin_end_at > NOW()
+          ) THEN 'izin'
           ELSE 'offline'
         END AS status,
         (

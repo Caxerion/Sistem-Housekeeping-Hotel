@@ -31,29 +31,29 @@ function formatTime(dateStr) {
   });
 }
 
-const statusLabel = {
-  active: 'Aktif',
-  completed: 'Selesai',
-  izin: 'Izin',
-};
+  const statusLabel = {
+    active: 'Aktif',
+    completed: 'Selesai',
+    izin: 'Izin',
+  };
 
-const statusColor = {
-  active: { bg: '#dcfce7', color: '#16a34a' },
-  completed: { bg: '#dbeafe', color: '#2563eb' },
-  izin: { bg: '#fef3c7', color: '#d97706' },
-};
+  const statusColor = {
+    active: { bg: '#dcfce7', color: '#16a34a' },
+    completed: { bg: '#dbeafe', color: '#2563eb' },
+    izin: { bg: '#fef3c7', color: '#d97706' },
+  };
 
-function StatusBadge({ status }) {
-  const config = statusColor[status] || { bg: '#f3f4f6', color: '#6b7280' };
-  return (
-    <span
-      className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-      style={{ backgroundColor: config.bg, color: config.color }}
-    >
-      {statusLabel[status] || status || '-'}
-    </span>
-  );
-}
+  function StatusBadge({ status }) {
+    const config = statusColor[status] || { bg: '#f3f4f6', color: '#6b7280' };
+    return (
+      <span
+        className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
+        style={{ backgroundColor: config.bg, color: config.color }}
+      >
+        {statusLabel[status] || status || '-'}
+      </span>
+    );
+  }
 
 function AbsensiLogs() {
   const navigate = useNavigate();
@@ -235,29 +235,51 @@ function AbsensiLogs() {
                     </span>
                     <StatusBadge status={log.status} />
                   </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    <i className="fa-regular fa-clock"></i>{' '}
-                    {formatTime(log.check_in_at)} - {formatTime(log.check_out_at)}
-                  </span>
+                  {log.status === 'izin' ? (
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                      <i className="fa-regular fa-clock"></i>{' '}
+                      {formatDate(log.izin_start_at)} - {formatDate(log.izin_end_at)}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                      <i className="fa-regular fa-clock"></i>{' '}
+                      {formatTime(log.check_in_at)} - {formatTime(log.check_out_at)}
+                    </span>
+                  )}
                 </div>
 
-                {/* Bottom Section: Check In/Out, Catatan, Foto */}
+                {/* Bottom Section: Details */}
                 <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-gray-400">Check In:</span>
-                    <span className="font-semibold text-gray-700">{formatTime(log.check_in_at)}</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <span className="text-gray-400">Check Out:</span>
-                    <span className="font-semibold text-gray-700">{formatTime(log.check_out_at)}</span>
-                  </div>
+                  {log.status === 'izin' ? (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-gray-400">Mulai Izin:</span>
+                        <span className="font-semibold text-gray-700">{formatDate(log.izin_start_at)}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-gray-400">Izin Sampai:</span>
+                        <span className="font-semibold text-gray-700">{formatDate(log.izin_end_at)}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-gray-400">Check In:</span>
+                        <span className="font-semibold text-gray-700">{formatTime(log.check_in_at)}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="text-gray-400">Check Out:</span>
+                        <span className="font-semibold text-gray-700">{formatTime(log.check_out_at)}</span>
+                      </div>
+                    </>
+                  )}
 
-                  {log.notes && (
+                  {(log.izin_reason || log.notes) && (
                     <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 mt-2 break-words">
                       <span className="font-semibold text-gray-500 block mb-1">
-                        Catatan:
+                        {log.status === 'izin' ? 'Alasan Izin:' : 'Catatan:'}
                       </span>
-                      {log.notes}
+                      {log.status === 'izin' ? log.izin_reason : log.notes}
                     </div>
                   )}
 
