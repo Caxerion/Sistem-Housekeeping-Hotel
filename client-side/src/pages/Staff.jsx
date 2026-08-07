@@ -50,6 +50,41 @@ function Staff() {
   const [myAttendance, setMyAttendance] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
+  const [countdown, setCountdown] = useState('');
+
+  const isWithinWorkingHours = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    return hour >= 6 && hour < 19;
+  };
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const currentHour = now.getHours();
+      let target = new Date(now);
+      target.setHours(6, 0, 0, 0);
+
+      if (currentHour >= 19) {
+        target.setDate(target.getDate() + 1);
+      } else if (currentHour < 6) {
+        target.setDate(target.getDate());
+      } else {
+        setCountdown('');
+        return;
+      }
+
+      const diff = target - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff% (1000 * 60)) / 1000);
+      setCountdown(`${hours}j ${minutes}m ${seconds}d`);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchStaff = async () => {
     try {
@@ -126,9 +161,10 @@ function Staff() {
           {!attendanceLoading && !(myAttendance && myAttendance.status === 'active') && (
             <button
               onClick={() => navigate('/izin')}
-              className="absolute -top-3 -right-3 px-4 py-1.5 text-sm text-amber-600 font-semibold bg-white border border-amber-200 shadow-sm hover:bg-amber-50 rounded-lg transition-colors"
+              disabled={!isWithinWorkingHours()}
+              className="absolute -top-3 -right-3 px-4 py-1.5 text-sm font-semibold bg-white border border-amber-200 shadow-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed enabled:text-amber-600 enabled:hover:bg-amber-50"
             >
-              Izin
+              {isWithinWorkingHours() ? 'Izin' : `Form Izin dibuka dalam ${countdown}`}
             </button>
           )}
           {attendanceLoading ? (
@@ -149,6 +185,15 @@ function Staff() {
                 Akhiri Absensi
               </button>
             </div>
+          ) : myAttendance && myAttendance.status === 'completed' ? (
+            <button
+              disabled
+              className="w-full py-4 text-center text-gray-500 font-semibold bg-gray-50 rounded-xl cursor-not-allowed"
+            >
+              {myAttendance.check_out_at
+                ? `Absensi dibuka lagi pukul ${new Date(new Date(myAttendance.check_out_at).getTime() + 7 * 60 * 60 * 1000).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                : 'Absensi hanya bisa dilakukan sekali'}
+            </button>
           ) : (
             <button
               onClick={handleStartAttendance}
