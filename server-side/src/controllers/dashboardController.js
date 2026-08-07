@@ -35,8 +35,40 @@ const getDashboardStats = asyncHandler(async (req, res) => {
 
   const [staffRows] = await pool.query(
     `SELECT COUNT(DISTINCT employee_id) AS total
-     FROM cleaning_logs
-     WHERE DATE(cleaned_at) = CURDATE()`
+     FROM attendance
+     WHERE DATE(check_in_at) = CURDATE()`
+  );
+
+  const [staffOnDutyRows] = await pool.query(
+    `SELECT COUNT(DISTINCT e.id) AS total
+     FROM employees e
+     JOIN positions p ON p.id = e.position_id
+     WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')
+       AND EXISTS (
+         SELECT 1 FROM room_maintenance_schedule_staff rss
+         JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+         WHERE rss.employee_id = e.id
+           AND rms.status = 'in_progress'
+       )`
+  );
+
+  const [staffStandbyRows] = await pool.query(
+    `SELECT COUNT(DISTINCT e.id) AS total
+     FROM employees e
+     JOIN positions p ON p.id = e.position_id
+     WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')
+       AND NOT EXISTS (
+         SELECT 1 FROM room_maintenance_schedule_staff rss
+         JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+         WHERE rss.employee_id = e.id
+           AND rms.status = 'in_progress'
+       )
+       AND EXISTS (
+         SELECT 1 FROM attendance att
+         WHERE att.employee_id = e.id
+           AND DATE(att.check_in_at) = CURDATE()
+           AND att.status = 'active'
+       )`
   );
 
   const stats = {
@@ -46,6 +78,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
     cleaning: cleaningRows[0].total,
     sedangMaintenance: maintenanceRows[0].total,
     staffHadirHariIni: staffRows[0].total,
+    staffOnDuty: staffOnDutyRows[0].total,
+    staffStandby: staffStandbyRows[0].total,
   };
 
   res.json({ success: true, data: stats });

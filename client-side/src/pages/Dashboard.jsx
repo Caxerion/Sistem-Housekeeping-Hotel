@@ -34,6 +34,7 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [maintenanceOpen, setMaintenanceOpen] = useState(false);
+  const [staffOpen, setStaffOpen] = useState(false);
 
   const [trend, setTrend] = useState([]);
   const [trendLoading, setTrendLoading] = useState(true);
@@ -103,6 +104,8 @@ function Dashboard() {
     cleaning: 0,
     sedangMaintenance: 0,
     staffHadirHariIni: 0,
+    staffOnDuty: 0,
+    staffStandby: 0,
   };
 
   return (
@@ -129,8 +132,48 @@ function Dashboard() {
             <div className="text-sm text-gray-500 mt-1">Kamar Tersedia</div>
           </div>
           <div className="bg-white rounded-2xl shadow p-6">
-            <div className="text-3xl font-bold text-purple-500">{statsData.staffHadirHariIni}</div>
-            <div className="text-sm text-gray-500 mt-1">Jumlah Staff Hadir</div>
+            <button
+              type="button"
+              onClick={() => setStaffOpen((prev) => !prev)}
+              className="w-full flex items-center justify-between"
+            >
+              <div className="text-left">
+                <div className="text-3xl font-bold text-purple-500">
+                  {statsData.staffHadirHariIni}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">Jumlah Staff Hadir</div>
+              </div>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform ${staffOpen ? 'rotate-180' : ''}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                staffOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <div className="border-t border-gray-100 pt-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Stand By</span>
+                  <span className={`font-semibold ${statsData.staffStandby > 0 ? 'text-blue-600' : 'text-gray-400'}`}>
+                    {statsData.staffStandby}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">On Duty</span>
+                  <span className={`font-semibold ${statsData.staffOnDuty > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {statsData.staffOnDuty}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow p-6">
