@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import Swal from 'sweetalert2';
 
 const MIN_PHOTOS = 3;
 
@@ -93,7 +94,13 @@ function EndAttendance() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      navigate('/staff');
+      Swal.fire({
+        icon: 'success',
+        title: 'Absensi Tercatat!',
+        text: 'Sampai ketemu besok lagi!',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => navigate('/staff'));
     } catch (err) {
       setError(err.response?.data?.message || 'Gagal mengakhiri absensi.');
     } finally {
@@ -113,7 +120,13 @@ function EndAttendance() {
     setSubmittingIzin(true);
     try {
       await api.post(`/attendance/${id}/izin`, { reason: izinReason });
-      navigate('/staff');
+      Swal.fire({
+        icon: 'success',
+        title: 'Absensi Tercatat!',
+        text: 'Sampai ketemu besok lagi!',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => navigate('/staff'));
     } catch (err) {
       setError(err.response?.data?.message || 'Gagal mengirim izin.');
     } finally {
