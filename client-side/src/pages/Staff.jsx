@@ -13,6 +13,14 @@ const statusConfig = {
   offline: { label: 'Offline', bg: '#f1f3f5', color: '#6b7280'}
 };
 
+const statusFilterOptions = [
+  { key: 'semua', label: 'Semua' },
+  { key: 'on_duty', label: 'On-Duty' },
+  { key: 'standby', label: 'Stand By' },
+  { key: 'izin', label: 'Izin' },
+  { key: 'offline', label: 'Offline' },
+];
+
 function StatusBadge({ status }) {
   const config = statusConfig[status] || { label: status || '-', bg: '#f1f3f5', color: '#6b7280' };
   return (
@@ -36,6 +44,8 @@ function Staff() {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('semua');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [myAttendance, setMyAttendance] = useState(null);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -97,6 +107,14 @@ function Staff() {
     navigate(`/attendance/end/${myAttendance.id}`);
   };
 
+  const filteredStaffList = staffList.filter((staff) => {
+    const matchesStatus = statusFilter === 'semua' || staff.status === statusFilter;
+    const matchesSearch = (staff.full_name || '')
+      .toLowerCase()
+      .includes(searchQuery.trim().toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <div className="p-6 bg-white min-h-screen">
       <h1 className="text-2xl font-bold text-gray-800">Staff</h1>
@@ -145,11 +163,36 @@ function Staff() {
 
       {/* ===== Tabel Staff ===== */}
       <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm overflow-x-auto">
-        {user?.current_role === 'admin' && (
-          <div className="flex justify-end mb-4">
+        {/* ===== Search Bar & Log Absensi ===== */}
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+          <div className="relative w-full max-w-xs">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama petugas..."
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
+            />
+          </div>
+
+          {user?.current_role === 'admin' && (
             <button
               onClick={() => navigate('/absensi-logs')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shrink-0"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -160,16 +203,53 @@ function Staff() {
               </svg>
               Log Absensi
             </button>
-          </div>
-        )}
+          )}
+        </div>
+
+        {/* ===== Filter Kategori Status ===== */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {statusFilterOptions.map((opt) => {
+            const isActive = statusFilter === opt.key;
+            const config = statusConfig[opt.key];
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setStatusFilter(opt.key)}
+                className="px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors"
+                style={
+                  isActive
+                    ? {
+                        backgroundColor: config ? config.color : '#374151',
+                        borderColor: config ? config.color : '#374151',
+                        color: '#ffffff',
+                      }
+                    : {
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e5e7eb',
+                        color: '#6b7280',
+                      }
+                }
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
         {loading ? (
           <p className="text-gray-400 text-sm">Memuat data staff...</p>
         ) : error ? (
           <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-600">
             {error}
           </div>
-        ) : staffList.length === 0 ? (
-          <p className="text-gray-400 text-sm">Belum ada data staff.</p>
+        ) : filteredStaffList.length === 0 ? (
+          <p className="text-gray-400 text-sm">
+            {staffList.length === 0
+              ? 'Belum ada data staff.'
+              : searchQuery.trim() !== ''
+              ? `Tidak ada staff dengan nama "${searchQuery}".`
+              : 'Tidak ada staff dengan status ini.'}
+          </p>
         ) : (
           <table className="w-full text-left table-auto md:table-fixed">
             <thead>
@@ -183,7 +263,7 @@ function Staff() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {staffList.map((staff, idx) => (
+              {filteredStaffList.map((staff, idx) => (
                 <tr key={staff.id}>
                   <td className="py-4 pr-4 text-gray-500 text-sm">{idx + 1}</td>
                   <td className="py-4 pr-4 text-gray-800 text-sm font-medium">{staff.full_name}</td>
