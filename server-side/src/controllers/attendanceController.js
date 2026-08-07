@@ -1,6 +1,14 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
 
+function parseLocalDate(dateStr) {
+  if (!dateStr) return null;
+  const parts = String(dateStr).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return null;
+  const [year, month, day] = parts;
+  return new Date(year, month - 1, day);
+}
+
 // GET /api/attendance/today
 const getMyAttendanceToday = asyncHandler(async (req, res) => {
   const employeeId = req.user.employee_id;
@@ -25,15 +33,31 @@ const checkIn = asyncHandler(async (req, res) => {
   const employeeId = req.user.employee_id;
 
   const [existing] = await pool.query(
-    `SELECT id FROM attendance
-      WHERE employee_id = ? AND DATE(check_in_at) = CURDATE() AND status = 'active'`,
+    `SELECT check_out_at FROM attendance
+       WHERE employee_id = ?
+       ORDER BY id DESC
+       LIMIT 1`,
     [employeeId]
   );
   if (existing.length > 0) {
-    return res.status(409).json({
-      success: false,
-      message: 'Anda sudah melakukan absensi hari ini dan belum mengakhirinya.',
-    });
+    const lastCheckout = new Date(existing[0].check_out_at);
+    if (existing[0].check_out_at && !isNaN(lastCheckout)) {
+      const nextAvailable = new Date(lastCheckout.getTime() + 7 * 60 * 60 * 1000);
+      const now = new Date();
+      if (now < nextAvailable) {
+        const formatted = nextAvailable.toLocaleString('id-ID', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        return res.status(409).json({
+          success: false,
+          message: `Anda baru saja selesai absensi. Absensi berikutnya tersedia pada ${formatted}.`,
+        });
+      }
+    }
   }
 
   const [result] = await pool.query(
@@ -102,8 +126,8 @@ const submitIzin = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Sesi absensi aktif tidak ditemukan.' });
   }
 
-  let izinStart = start_date ? new Date(start_date) : new Date();
-  let izinEnd = end_date ? new Date(end_date) : new Date(izinStart.getTime() + 24 * 60 * 60 * 1000);
+  let izinStart = parseLocalDate(start_date) || new Date();
+  let izinEnd = parseLocalDate(end_date) || new Date(izinStart.getTime() + 24 * 60 * 60 * 1000);
 
   if (izinEnd <= izinStart) {
     izinEnd = new Date(izinStart.getTime() + 24 * 60 * 60 * 1000);
@@ -146,10 +170,14 @@ const submitIzinDirect = asyncHandler(async (req, res) => {
     return res.status(409).json({ success: false, message: 'Anda sudah memiliki catatan absensi/izin hari ini.' });
   }
 
-  let izinStart = new Date(start_date);
-  let izinEnd = end_date ? new Date(end_date) : new Date(izinStart.getTime() + 24 * 60 * 60 * 1000);
+  let izinStart = parseLocalDate(start_date);
+  let izinEnd = parseLocalDate(end_date);
 
-  if (izinEnd <= izinStart) {
+  if (!izinStart) {
+    return res.status(400).json({ success: false, message: 'Tanggal mulai izin wajib diisi.' });
+  }
+
+  if (!izinEnd || izinEnd <= izinStart) {
     izinEnd = new Date(izinStart.getTime() + 24 * 60 * 60 * 1000);
   }
 
