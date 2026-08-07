@@ -119,7 +119,7 @@ function Staff() {
             >
               {checkingIn ? 'Memproses...' : '+ Lakukan Absensi'}
             </button>
-          )}
+          )} 
         </div>
       )}
 
