@@ -334,6 +334,8 @@ CREATE TABLE IF NOT EXISTS attendance (
     notes         TEXT NULL,          -- catatan wajib saat check-out normal
     photos        JSON NULL,          -- array of string, contoh: ["/uploads/attendance/a.jpg", "/uploads/attendance/b.jpg"]
     izin_reason   TEXT NULL,          -- alasan wajib kalau status = 'izin'
+    izin_start_at DATETIME NULL,      -- mulai izin
+    izin_end_at   DATETIME NULL,      -- batas akhir izin (NULL berarti 24 jam dari mulai)
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
     INDEX idx_attendance_employee (employee_id),

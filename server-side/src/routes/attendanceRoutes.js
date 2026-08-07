@@ -5,6 +5,7 @@ const {
     checkIn,
     checkOut,
     submitIzin,
+    submitIzinDirect,
     getAttendanceLogs,
 } = require('../controllers/attendanceController');
 const { verifyToken, verifyRole } = require('../middlewares/auth');
@@ -17,6 +18,7 @@ router.get('/today', getMyAttendanceToday);
 router.post('/check-in', checkIn);
 router.post('/:id/check-out', uploadAttendancePhotos.array('photos', 10), checkOut);
 router.post('/:id/izin', submitIzin);
+router.post('/izin-direct', submitIzinDirect);
 router.get('/logs', getAttendanceLogs);
 
 module.exports = router;

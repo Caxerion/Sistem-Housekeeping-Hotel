@@ -1,29 +1,37 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
 function IzinForm() {
   const navigate = useNavigate();
-  const [attendance, setAttendance] = useState(null);
+  const { user } = useAuth();
   const [izinReason, setIzinReason] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const res = await api.get('/attendance/today');
-        setAttendance(res.data.data);
-      } catch {
-        setError('Gagal memuat data absensi.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAttendance();
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    setStartDate(today);
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    setEndDate(tomorrow.toISOString().split('T')[0]);
   }, []);
+
+  const handleStartDateChange = (e) => {
+    const val = e.target.value;
+    setStartDate(val);
+    if (val && !endDate) {
+      const d = new Date(val);
+      d.setDate(d.getDate() + 1);
+      setEndDate(d.toISOString().split('T')[0]);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,14 +42,18 @@ function IzinForm() {
       return;
     }
 
-    if (!attendance) {
-      setError('Tidak ada sesi absensi aktif.');
+    if (!startDate) {
+      setError('Tanggal mulai izin wajib diisi.');
       return;
     }
 
     setSubmitting(true);
     try {
-      await api.post(`/attendance/${attendance.id}/izin`, { reason: izinReason });
+      await api.post('/attendance/izin-direct', {
+        reason: izinReason,
+        start_date: startDate,
+        end_date: endDate || null,
+      });
       Swal.fire({
         icon: 'success',
         title: 'Izin Tercatat!',
@@ -56,44 +68,60 @@ function IzinForm() {
     }
   };
 
-  if (loading) {
-    return <div className="p-6 text-gray-400 text-sm">Memuat...</div>;
-  }
-
   return (
     <div className="p-6 max-w-xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-800">Form Izin Absensi</h1>
       <p className="text-gray-500 mt-2">Ajukan izin absensi tanpa check-in atau check-out.</p>
 
       <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        {attendance ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Nama</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Nama</label>
               <input
                 type="text"
-                value={attendance.full_name || ''}
+                value={user?.employee_name || ''}
                 disabled
                 className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600"
               />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">No. Telepon</label>
-              <input
-                type="text"
-                value={attendance.phone || ''}
-                disabled
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600"
-              />
-            </div>
           </div>
-        ) : (
-          <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 text-sm text-amber-700 mb-4">
-            Anda belum melakukan absensi hari ini. Izin hanya dapat diajukan jika ada sesi absensi aktif.
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">No. Telepon</label>
+            <input
+              type="text"
+              value={user?.phone || ''}
+              disabled
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600"
+            />
           </div>
-        )}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Mulai Izin <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={handleStartDateChange}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-amber-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">
+                Izin Sampai
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">
               Alasan Izin <span className="text-red-500">*</span>
@@ -113,7 +141,7 @@ function IzinForm() {
           <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
-              disabled={submitting || !attendance}
+              disabled={submitting}
               className="rounded-lg bg-amber-600 px-4 py-2.5 font-semibold text-white hover:bg-amber-700 disabled:opacity-70 transition-colors"
             >
               {submitting ? 'Mengirim...' : 'Kirim Izin'}

@@ -156,10 +156,11 @@ const login = async (req, res) => {
         const App = user.access_rights.find(access => access.app_name === myApp);
 
         const [empRows] = await pool.query(
-            "SELECT employee_id FROM users WHERE id = ?",
+            "SELECT e.id AS employee_id, e.phone FROM employees e JOIN users u ON u.employee_id = e.id WHERE u.id = ?",
             [user.user_id]
         );
         const employeeId = empRows.length > 0 ? empRows[0].employee_id : null;
+        const phone = empRows.length > 0 ? empRows[0].phone : null;
 
         const tokenPayload = {
             user_id: user.user_id,
@@ -167,6 +168,7 @@ const login = async (req, res) => {
             username: user.username,
             employee_name: user.employee_name,
             employee_position: user.employee_position,
+            phone: phone,
             current_app: myApp,
             role: App ? App.role : null,
             access_rights: user.access_rights 
@@ -190,6 +192,7 @@ const login = async (req, res) => {
                     employee_id: employeeId,
                     employee_name: user.employee_name,
                     employee_position: user.employee_position,
+                    phone: phone,
                     current_role: App ? App.role : null,
                     access_rights: user.access_rights
                 }
