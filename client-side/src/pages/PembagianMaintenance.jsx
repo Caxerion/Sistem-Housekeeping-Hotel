@@ -646,45 +646,57 @@ function PembagianMaintenance() {
                       <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
                         <StatusBadge status={sched.status} />
                       </td>
-                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
-                        <div className="flex gap-2">
-                          {sched.status === 'scheduled' && (
-                            <>
-                              <button
-                                onClick={() => handleStart(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                              >
-                                Mulai
-                              </button>
-                              <button
-                                onClick={() => handleCancel(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                Batal
-                              </button>
-                            </>
-                          )}
-                          {sched.status === 'in_progress' && (
-                            <>
-                              <button
-                                onClick={() => handleComplete(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                              >
-                                Selesai
-                              </button>
-                              <button
-                                onClick={() => handleCancel(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                Batal
-                              </button>
-                            </>
-                          )}
-                          {(sched.status === 'completed' || sched.status === 'canceled' || !sched.status) && (
-                            <span className="text-xs text-gray-400">Tidak ada aksi</span>
-                          )}
-                        </div>
-                      </td>
+                        <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                          <div className="flex gap-2">
+                            {sched.status === 'scheduled' && (
+                              <>
+                                {(user?.current_role === 'admin' ||
+                                  (Array.isArray(sched.assigned_staff_ids) &&
+                                   sched.assigned_staff_ids.includes(user?.employee_id))) && (
+                                  <button
+                                    onClick={() => handleStart(sched.id)}
+                                    className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                                  >
+                                    Mulai
+                                  </button>
+                                )}
+                                {user?.current_role === 'admin' && (
+                                  <button
+                                    onClick={() => handleCancel(sched.id)}
+                                    className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                                  >
+                                    Batal
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {sched.status === 'in_progress' && (
+                              <>
+                                {(user?.current_role === 'admin' ||
+                                  (Array.isArray(sched.assigned_staff_ids) &&
+                                   sched.assigned_staff_ids.includes(user?.employee_id))) && (
+                                  <button
+                                    onClick={() => handleComplete(sched.id)}
+                                    className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                                  >
+                                    Selesai
+                                  </button>
+                                )}
+                                {user?.current_role === 'admin' && (
+                                  <button
+                                    onClick={() => handleCancel(sched.id)}
+                                    className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                                  >
+                                    Batal
+                                  </button>
+                                )}
+                              </>
+                            )}
+                            {(sched.status === 'completed' || sched.status === 'canceled' || !sched.status) && (
+                              <span className="text-xs text-gray-400">Tidak ada aksi</span>
+                            )}
+                          </div>
+                        </td>
                     </tr>
                   ))
                 )}

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 
 function RiwayatPembersihan() {
+  const { user } = useAuth();
+  const isAdmin = user?.current_role === 'admin';
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [myHistoryOnly, setMyHistoryOnly] = useState(false);
 
   useEffect(() => {
     const fetchCleaningHistory = async () => {
@@ -57,11 +61,15 @@ function RiwayatPembersihan() {
   // Filter log berdasarkan nomor kamar, nama petugas, atau catatan
   const filteredLogs = logs.filter((log) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       log.room_number?.toLowerCase().includes(query) ||
       log.employee_name?.toLowerCase().includes(query) ||
-      (log.action_note && log.action_note.toLowerCase().includes(query))
-    );
+      (log.action_note && log.action_note.toLowerCase().includes(query));
+
+    const matchesMyHistory = !myHistoryOnly ||
+      (Array.isArray(log.employee_ids) && log.employee_ids.includes(user?.employee_id));
+
+    return matchesSearch && matchesMyHistory;
   });
 
   // Helper untuk format tanggal dan waktu
@@ -103,18 +111,32 @@ function RiwayatPembersihan() {
       <div className="flex items-center justify-between mb-6">
         <p className="text-lg font-light text-gray-400">Daftar Aktivitas Log</p>
         <div className="flex justify-end">
-          <button
-            onClick={handleDeleteAll}
-            disabled={logs.length === 0}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm
-              ${logs.length === 0
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 border border-red-200'
-              }`}
-          >
-            <i className="fa-regular fa-trash-can text-base"></i>
-            Hapus Semua Riwayat
-          </button>
+          {isAdmin ? (
+            <button
+              onClick={handleDeleteAll}
+              disabled={logs.length === 0}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm
+                ${logs.length === 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 border border-red-200'
+                }`}
+            >
+              <i className="fa-regular fa-trash-can text-base"></i>
+              Hapus Semua Riwayat
+            </button>
+          ) : (
+            <button
+              onClick={() => setMyHistoryOnly((prev) => !prev)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm
+                ${myHistoryOnly
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                }`}
+            >
+              <i className={`fa-${myHistoryOnly ? 'solid' : 'regular'} ${myHistoryOnly ? 'fa-users' : 'fa-user'}`}></i>
+              {myHistoryOnly ? 'History Semua' : 'History Kamu'}
+            </button>
+          )}
         </div>
       </div>
 

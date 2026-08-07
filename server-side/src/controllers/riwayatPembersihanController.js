@@ -22,26 +22,31 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
 
     if (scheduleIds.length > 0) {
         const [staffRows] = await pool.query(
-            `SELECT rss.schedule_id, e.full_name
+            `SELECT rss.schedule_id, e.full_name, e.id AS employee_id
          FROM room_maintenance_schedule_staff rss
          JOIN employees e ON e.id = rss.employee_id
         WHERE rss.schedule_id IN (?)`,
             [scheduleIds]
         );
         staffRows.forEach((row) => {
-            if (!staffMap[row.schedule_id]) staffMap[row.schedule_id] = [];
-            staffMap[row.schedule_id].push(row.full_name);
+            if (!staffMap[row.schedule_id]) staffMap[row.schedule_id] = { names: [], ids: [] };
+            staffMap[row.schedule_id].names.push(row.full_name);
+            staffMap[row.schedule_id].ids.push(row.employee_id);
         });
     }
 
-    const data = rows.map((r) => ({
-        id: r.id,
-        room_number: r.room_number,
-        room_type: r.room_type,
-        employee_name: (staffMap[r.id] || []).join(', ') || '-',
-        action_note: [r.title, r.notes].filter(Boolean).join(' — ') || null,
-        cleaned_at: r.cleaned_at,
-    }));
+    const data = rows.map((r) => {
+        const staff = staffMap[r.id] || { names: [], ids: [] };
+        return {
+            id: r.id,
+            room_number: r.room_number,
+            room_type: r.room_type,
+            employee_name: staff.names.join(', ') || '-',
+            employee_ids: staff.ids,
+            action_note: [r.title, r.notes].filter(Boolean).join(' — ') || null,
+            cleaned_at: r.cleaned_at,
+        };
+    });
 
     res.json({ success: true, data });
 });
