@@ -74,8 +74,19 @@ function Staff() {
       const res = await api.post('/attendance/check-in');
       setMyAttendance(res.data.data);
       fetchStaff();
+      Swal.fire({
+        icon: 'success',
+        title: 'Absensi Berhasil!',
+        text: 'Absensi Anda tercatat sebagai aktif',
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (err) {
-      alert(err.response?.data?.message || 'Gagal memulai absensi.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal',
+        text: err.response?.data?.message || 'Gagal memulai absensi.',
+      });
     } finally {
       setCheckingIn(false);
     }
