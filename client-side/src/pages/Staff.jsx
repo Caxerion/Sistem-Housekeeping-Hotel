@@ -7,9 +7,10 @@ import Swal from 'sweetalert2';
 /* eslint-disable react-hooks/set-state-in-effect */
 
 const statusConfig = {
-  on_duty: { label: 'On Duty', bg: '#dcfce7', color: '#16a34a' },
-  standby: { label: 'Standby', bg: '#dbeafe', color: '#2563eb' },
-  offline: { label: 'Offline', bg: '#f1f3f5', color: '#6b7280' },
+  on_duty: { label: 'On-Duty', bg: '#dcfce7', color: '#16a34a'},
+  standby: { label: 'Stand By', bg: '#dbeafe', color: '#2563eb'},
+  izin: { label: 'Izin', bg: '#dbeafe', color: '#d80a0a'},
+  offline: { label: 'Offline', bg: '#f1f3f5', color: '#6b7280'}
 };
 
 function StatusBadge({ status }) {
@@ -103,7 +104,15 @@ function Staff() {
 
       {/* ===== Slot Absensi (hanya untuk staff) ===== */}
       {user?.current_role === 'staff' && (
-        <div className="mt-6 border border-dashed border-gray-300 rounded-2xl p-5">
+        <div className="mt-6 relative border border-dashed border-gray-300 rounded-2xl p-5">
+          {!attendanceLoading && !(myAttendance && myAttendance.status === 'active') && (
+            <button
+              onClick={() => navigate('/izin')}
+              className="absolute -top-3 -right-3 px-4 py-1.5 text-sm text-amber-600 font-semibold bg-white border border-amber-200 shadow-sm hover:bg-amber-50 rounded-lg transition-colors"
+            >
+              Izin
+            </button>
+          )}
           {attendanceLoading ? (
             <p className="text-gray-400 text-sm">Memuat status absensi...</p>
           ) : myAttendance && myAttendance.status === 'active' ? (
@@ -168,7 +177,7 @@ function Staff() {
                 <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">No</th>
                 <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">Nama Petugas</th>
                 <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">Posisi</th>
-                <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">Shift</th>
+                <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">Lokasi</th>
                 <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">No. Handphone</th>
                 <th className="text-gray-800 text-sm font-semibold pb-3">Status</th>
               </tr>
@@ -179,7 +188,15 @@ function Staff() {
                   <td className="py-4 pr-4 text-gray-500 text-sm">{idx + 1}</td>
                   <td className="py-4 pr-4 text-gray-800 text-sm font-medium">{staff.full_name}</td>
                   <td className="py-4 pr-4 text-gray-500 text-sm">{staff.position}</td>
-                  <td className="py-4 pr-4 text-gray-500 text-sm">{staff.shift || '-'}</td>
+                  <td className="py-4 pr-4 text-sm">
+                    {staff.shift ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                        {`Kamar ${staff.shift}`}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
                   <td className="py-4 pr-4 text-gray-500 text-sm">{staff.phone || '-'}</td>
                   <td className="py-4 text-sm">
                     <StatusBadge status={staff.status} />

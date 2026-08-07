@@ -14,6 +14,7 @@ import Register from "./pages/Register";
 import Staff from './pages/Staff';
 import EndAttendance from './pages/Endattendance';
 import AbsensiLogs from './pages/AbsensiLogs';
+import IzinForm from './pages/IzinForm';
 
 function App () {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -54,6 +55,7 @@ function App () {
              <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
              <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>
              <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
+             <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
         </Routes>
     )
 }

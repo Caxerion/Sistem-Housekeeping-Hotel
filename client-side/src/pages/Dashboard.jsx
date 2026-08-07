@@ -58,6 +58,8 @@ function Dashboard() {
       }
     };
     fetchStats();
+    const interval = setInterval(fetchStats, 30 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchTrend = useCallback(async () => {

@@ -36,7 +36,8 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const [staffRows] = await pool.query(
     `SELECT COUNT(DISTINCT employee_id) AS total
      FROM attendance
-     WHERE DATE(check_in_at) = CURDATE()`
+     WHERE DATE(check_in_at) = CURDATE()
+       AND status = 'active'`
   );
 
   const [staffOnDutyRows] = await pool.query(
