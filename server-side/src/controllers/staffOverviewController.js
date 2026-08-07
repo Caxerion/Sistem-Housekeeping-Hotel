@@ -22,7 +22,16 @@ const getStaffOverview = asyncHandler(async (req, res) => {
                 AND att.status = 'active'
           ) THEN 'standby'
           ELSE 'offline'
-        END AS status
+        END AS status,
+        (
+            SELECT r.room_number
+            FROM room_maintenance_schedule_staff rss
+            JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+            JOIN rooms r ON r.id = rms.room_id
+            WHERE rss.employee_id = e.id
+              AND rms.status = 'in_progress'
+            LIMIT 1
+        ) AS shift
     FROM employees e
     JOIN positions p ON p.id = e.position_id
     WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')

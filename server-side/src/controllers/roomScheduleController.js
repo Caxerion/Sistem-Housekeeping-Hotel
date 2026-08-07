@@ -254,13 +254,14 @@ const startSchedule = asyncHandler(async (req, res) => {
   }
 
   // Hanya staff yang ditugaskan pada jadwal ini yang boleh memulai maintenance
+  // Admin bisa memulai maintenance untuk staff lain
   const [assignedRows] = await pool.query(
     `SELECT 1 FROM room_maintenance_schedule_staff
      WHERE schedule_id = ? AND employee_id = ?
      LIMIT 1`,
     [id, employeeId]
   );
-  if (assignedRows.length === 0) {
+  if (assignedRows.length === 0 && req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Akses ditolak: Anda tidak ditugaskan pada maintenance ini.',
@@ -299,13 +300,14 @@ const completeSchedule = asyncHandler(async (req, res) => {
   }
 
   // Hanya staff yang ditugaskan pada jadwal ini yang boleh menyelesaikannya
+  // Admin bisa menyelesaikan maintenance untuk staff lain
   const [assignedRows] = await pool.query(
     `SELECT 1 FROM room_maintenance_schedule_staff
      WHERE schedule_id = ? AND employee_id = ?
      LIMIT 1`,
     [id, employeeId]
   );
-  if (assignedRows.length === 0) {
+  if (assignedRows.length === 0 && req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
       message: 'Akses ditolak: Anda tidak ditugaskan pada maintenance ini.',
