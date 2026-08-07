@@ -41,7 +41,7 @@ const checkIn = asyncHandler(async (req, res) => {
   );
 
   const [rows] = await pool.query(
-    `SELECT a.id, a.check_in_at, e.full_name, e.phone
+    `SELECT a.id, a.check_in_at, a.status, e.full_name, e.phone
        FROM attendance a JOIN employees e ON e.id = a.employee_id
       WHERE a.id = ?`,
     [result.insertId]

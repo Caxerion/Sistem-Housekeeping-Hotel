@@ -94,23 +94,28 @@ const getAllSchedules = asyncHandler(async (req, res) => {
 
   if (scheduleIds.length > 0) {
     const [staffRows] = await pool.query(
-      `SELECT rss.schedule_id, e.full_name
+      `SELECT rss.schedule_id, e.full_name, e.id AS employee_id
          FROM room_maintenance_schedule_staff rss
          JOIN employees e ON e.id = rss.employee_id
         WHERE rss.schedule_id IN (?)`,
       [scheduleIds]
     );
     staffRows.forEach((row) => {
-      if (!staffMap[row.schedule_id]) staffMap[row.schedule_id] = [];
-      staffMap[row.schedule_id].push(row.full_name);
+      if (!staffMap[row.schedule_id]) staffMap[row.schedule_id] = { names: [], ids: [] };
+      staffMap[row.schedule_id].names.push(row.full_name);
+      staffMap[row.schedule_id].ids.push(row.employee_id);
     });
   }
 
-  const data = rows.map((r) => ({
-    ...r,
-    id: r.schedule_id, // dipakai frontend untuk key & aksi (null kalau belum dijadwalkan)
-    assigned_staff: r.schedule_id ? staffMap[r.schedule_id] || [] : [],
-  }));
+  const data = rows.map((r) => {
+    const staff = r.schedule_id ? (staffMap[r.schedule_id] || { names: [], ids: [] }) : { names: [], ids: [] };
+    return {
+      ...r,
+      id: r.schedule_id,
+      assigned_staff: staff.names,
+      assigned_staff_ids: staff.ids,
+    };
+  });
 
   res.json({ success: true, data });
 });
@@ -235,6 +240,7 @@ const createSchedule = asyncHandler(async (req, res) => {
 // PUT /api/room-schedule/:id/start
 const startSchedule = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const employeeId = req.user.employee_id;
   const [scheduleRows] = await pool.query(
     `SELECT room_id, status FROM room_maintenance_schedule WHERE id = ?`,
     [id]
@@ -245,6 +251,20 @@ const startSchedule = asyncHandler(async (req, res) => {
   }
   if (scheduleRows[0].status !== 'scheduled') {
     return res.status(409).json({ success: false, message: 'Jadwal ini sudah tidak berstatus scheduled.' });
+  }
+
+  // Hanya staff yang ditugaskan pada jadwal ini yang boleh memulai maintenance
+  const [assignedRows] = await pool.query(
+    `SELECT 1 FROM room_maintenance_schedule_staff
+     WHERE schedule_id = ? AND employee_id = ?
+     LIMIT 1`,
+    [id, employeeId]
+  );
+  if (assignedRows.length === 0) {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Anda tidak ditugaskan pada maintenance ini.',
+    });
   }
 
   await pool.query(
@@ -264,6 +284,8 @@ const startSchedule = asyncHandler(async (req, res) => {
 // PUT /api/room-schedule/:id/complete
 const completeSchedule = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const employeeId = req.user.employee_id;
+
   const [scheduleRows] = await pool.query(
     `SELECT room_id FROM room_maintenance_schedule WHERE id = ? AND status = 'in_progress'`,
     [id]
@@ -273,6 +295,20 @@ const completeSchedule = asyncHandler(async (req, res) => {
     return res.status(409).json({
       success: false,
       message: 'Jadwal tidak ditemukan atau belum berstatus in_progress.',
+    });
+  }
+
+  // Hanya staff yang ditugaskan pada jadwal ini yang boleh menyelesaikannya
+  const [assignedRows] = await pool.query(
+    `SELECT 1 FROM room_maintenance_schedule_staff
+     WHERE schedule_id = ? AND employee_id = ?
+     LIMIT 1`,
+    [id, employeeId]
+  );
+  if (assignedRows.length === 0) {
+    return res.status(403).json({
+      success: false,
+      message: 'Akses ditolak: Anda tidak ditugaskan pada maintenance ini.',
     });
   }
 
