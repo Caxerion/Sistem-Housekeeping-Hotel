@@ -40,9 +40,9 @@ const checkIn = asyncHandler(async (req, res) => {
     [employeeId]
   );
   if (existing.length > 0) {
-    const lastCheckout = new Date(existing[0].check_out_at);
-    if (existing[0].check_out_at && !isNaN(lastCheckout)) {
-      const nextAvailable = new Date(lastCheckout.getTime() + 7 * 60 * 60 * 1000);
+    const lastCheckout = parseLocalDate(existing[0].check_out_at);
+    if (existing[0].check_out_at && lastCheckout && !isNaN(lastCheckout)) {
+      const nextAvailable = new Date(lastCheckout.getTime() + 8 * 60 * 60 * 1000);
       const now = new Date();
       if (now < nextAvailable) {
         const formatted = nextAvailable.toLocaleString('id-ID', {
