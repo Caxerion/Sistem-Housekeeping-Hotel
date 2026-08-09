@@ -15,6 +15,8 @@ import Staff from './pages/Staff';
 import EndAttendance from './pages/Endattendance';
 import AbsensiLogs from './pages/AbsensiLogs';
 import IzinForm from './pages/IzinForm';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './context/ProtectedRoutes';
 
 function App () {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -41,22 +43,24 @@ function App () {
     );
 
     return(
-        <Routes>
-            <Route path="/login" element={<Login/>}/>
-            <Route path="/register" element={<Register/>}/>
-            <Route path="/dashboard" element={routeLayout('Dashboard', <Dashboard/>)}/>
-            <Route path="/" element={routeLayout('Dashboard', <Dashboard/>)}/>
-            <Route path="/staff" element={routeLayout('Staff', <Staff/>)}/>
-            <Route path="/datakamar" element={routeLayout('Data Kamar', <DataKamar/>)}/>
-            <Route path="/statuskamar" element={routeLayout('Status Kamar', <StatusKamar/>)}/>
-            <Route path="/riwayatpembersihan" element={routeLayout('Riwayat Pembersihan', <RiwayatPembersihan/>)}/>
-            <Route path="/pembagian-maintenance" element={routeLayout('Pembagian Maintenance', <PembagianMaintenance/>)}/>
-            <Route path="/inventory" element={routeLayout('Inventory', <Inventory/>)}/>
-             <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
-             <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>
-             <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
-             <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
-        </Routes>
+        <AuthProvider>
+            <Routes>
+                <Route path="/login" element={<Login/>}/>
+                <Route path="/register" element={<Register/>}/>
+                <Route path="/dashboard" element={routeLayout('Dashboard', <Dashboard/>)}/>
+                <Route path="/" element={routeLayout('Dashboard', <Dashboard/>)}/>
+                <Route path="/staff" element={routeLayout('Staff', <Staff/>)}/>
+                <Route path="/datakamar" element={routeLayout('Data Kamar', <DataKamar/>)}/>
+                <Route path="/statuskamar" element={routeLayout('Status Kamar', <StatusKamar/>)}/>
+                <Route path="/riwayatpembersihan" element={routeLayout('Riwayat Pembersihan', <RiwayatPembersihan/>)}/>
+                <Route path="/pembagian-maintenance" element={routeLayout('Pembagian Maintenance', <PembagianMaintenance/>)}/>
+                <Route path="/inventory" element={routeLayout('Inventory', <Inventory/>)}/>
+                <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
+                <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>
+                <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
+                <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
+            </Routes>
+        </AuthProvider>
     )
 }
 
