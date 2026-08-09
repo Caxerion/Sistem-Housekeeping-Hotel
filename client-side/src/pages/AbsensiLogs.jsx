@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 import StaffCard from '../components/absensi-logs/StaffCard';
@@ -12,6 +13,8 @@ import { groupLogsByPeriod, getAvailablePeriods, CalendarIcon, deduplicateLogsBy
 
 function AbsensiLogs() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewingStaff, setViewingStaff] = useState(null);
@@ -37,6 +40,23 @@ function AbsensiLogs() {
   useEffect(() => {
     fetchStaff();
   }, []);
+
+  useEffect(() => {
+    const employeeIdParam = searchParams.get('employee_id');
+    if (!employeeIdParam || user?.current_role === 'admin') return;
+
+    const staff = staffList.find((s) => String(s.id) === String(employeeIdParam));
+    if (!staff) return;
+
+    setViewingStaff(staff);
+    setSelectedPeriod('');
+    setSelectedWeek('all');
+    setLogsLoading(true);
+    api.get('/attendance/logs', { params: { employee_id: staff.id } })
+      .then((res) => setLogs(deduplicateLogsByDate(res.data.data || [])))
+      .catch(() => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat log absensi.' }))
+      .finally(() => setLogsLoading(false));
+  }, [searchParams, staffList, user]);
 
   const handleViewLogs = async (staff) => {
     setViewingStaff(staff);
@@ -127,12 +147,21 @@ function AbsensiLogs() {
           </p>
         </div>
         {viewingStaff ? (
-          <button
-            onClick={handleBack}
-            className="w-full sm:w-auto rounded-lg border border-gray-200 px-4 py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-          >
-            Kembali ke Daftar Staff
-          </button>
+          user?.current_role === 'admin' ? (
+            <button
+              onClick={handleBack}
+              className="w-full sm:w-auto rounded-lg border border-gray-200 px-4 py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+            >
+              Kembali ke Daftar Staff
+            </button>
+          ) : (
+            <button
+              onClick={goToStaffStatus}
+              className="w-full sm:w-auto rounded-lg border border-gray-200 px-4 py-2.5 font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+            >
+              Kembali ke Status Staff
+            </button>
+          )
         ) : (
           <button
             onClick={goToStaffStatus}
