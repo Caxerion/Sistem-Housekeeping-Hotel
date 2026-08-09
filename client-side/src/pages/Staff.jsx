@@ -72,7 +72,7 @@ function Staff() {
         setCooldownText('');
         return;
       }
-      const nextAvailable = new Date(checkout.getTime() + 5 * 60 * 60 * 1000);
+      const nextAvailable = new Date(checkout.getTime() + 2 * 60 * 60 * 1000);
       const now = new Date();
       const expired = now >= nextAvailable;
       setCooldownExpired(expired);
