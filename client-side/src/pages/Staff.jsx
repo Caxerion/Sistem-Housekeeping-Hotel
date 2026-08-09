@@ -180,6 +180,7 @@ function Staff() {
           loading={loading}
           error={error}
           searchQuery={searchQuery}
+          statusFilter={statusFilter}
         />
       </div>
     </div>
