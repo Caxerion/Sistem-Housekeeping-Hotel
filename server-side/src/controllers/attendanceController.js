@@ -42,7 +42,7 @@ const checkIn = asyncHandler(async (req, res) => {
   if (existing.length > 0) {
     const lastCheckout = parseLocalDate(existing[0].check_out_at);
     if (existing[0].check_out_at && lastCheckout && !isNaN(lastCheckout)) {
-      const nextAvailable = new Date(lastCheckout.getTime() + 8 * 60 * 60 * 1000);
+      const nextAvailable = new Date(lastCheckout.getTime() + 5* 60 * 60 * 1000);
       const now = new Date();
       if (now < nextAvailable) {
         const formatted = nextAvailable.toLocaleString('id-ID', {
@@ -193,10 +193,12 @@ const submitIzinDirect = asyncHandler(async (req, res) => {
 // GET /api/attendance/logs
 // Housekeeping Supervisor / Admin -> lihat SEMUA logs staff, bisa filter by employee_id
 // Staff biasa -> cuma lihat logs milik sendiri
-// Otomatis dibatasi 4 minggu terakhir.
+// Query params: employee_id?, start_date?, end_date?
 const getAttendanceLogs = asyncHandler(async (req, res) => {
   const employeeId = req.user.employee_id;
   const requestedEmployeeId = req.query.employee_id;
+  const startDate = req.query.start_date;
+  const endDate = req.query.end_date;
 
   const [positionRows] = await pool.query(
     `SELECT p.name AS position FROM employees e JOIN positions p ON p.id = e.position_id WHERE e.id = ?`,
@@ -204,24 +206,36 @@ const getAttendanceLogs = asyncHandler(async (req, res) => {
   );
   const isSupervisor = positionRows[0]?.position === 'Housekeeping Supervisor';
 
+  let dateFilter = 'a.check_in_at >= (NOW() - INTERVAL 4 WEEK)';
+  const params = [];
+
+  if (startDate) {
+    dateFilter = 'a.check_in_at >= ?';
+    params.push(startDate);
+    if (endDate) {
+      dateFilter += ' AND a.check_in_at <= ?';
+      params.push(endDate);
+    }
+  }
+
   const baseQuery = `
     SELECT
         a.id, a.employee_id, e.full_name, a.check_in_at, a.check_out_at,
         a.status, a.notes, a.photos, a.izin_reason, a.izin_start_at, a.izin_end_at
     FROM attendance a
     JOIN employees e ON e.id = a.employee_id
-    WHERE a.check_in_at >= (NOW() - INTERVAL 4 WEEK)
+    WHERE ${dateFilter}
   `;
 
   let data;
   if (isSupervisor && requestedEmployeeId) {
-    const [rows] = await pool.query(`${baseQuery} AND a.employee_id = ? ORDER BY a.check_in_at DESC`, [requestedEmployeeId]);
+    const [rows] = await pool.query(`${baseQuery} AND a.employee_id = ? ORDER BY a.check_in_at DESC`, [...params, requestedEmployeeId]);
     data = rows.map((r) => ({ ...r, photos: (r.photos || []).map(p => `${req.protocol}://${req.get('host')}${p}`) }));
   } else if (isSupervisor) {
-    const [rows] = await pool.query(`${baseQuery} ORDER BY a.check_in_at DESC`);
+    const [rows] = await pool.query(`${baseQuery} ORDER BY a.check_in_at DESC`, params);
     data = rows.map((r) => ({ ...r, photos: (r.photos || []).map(p => `${req.protocol}://${req.get('host')}${p}`) }));
   } else {
-    const [rows] = await pool.query(`${baseQuery} AND a.employee_id = ? ORDER BY a.check_in_at DESC`, [employeeId]);
+    const [rows] = await pool.query(`${baseQuery} AND a.employee_id = ? ORDER BY a.check_in_at DESC`, [...params, employeeId]);
     data = rows.map((r) => ({ ...r, photos: (r.photos || []).map(p => `${req.protocol}://${req.get('host')}${p}`) }));
   }
 

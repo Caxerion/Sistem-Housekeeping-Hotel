@@ -23,7 +23,7 @@ function AttendanceSlot({
     navigate(`/attendance/end/${myAttendance.id}`);
   };
 
-  if (!user?.current_role === 'staff') return null;
+  if (user?.current_role !== 'staff') return null;
 
   return (
     <div className="mt-6 relative border border-dashed border-gray-300 rounded-2xl p-5">
