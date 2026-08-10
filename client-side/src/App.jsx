@@ -3,7 +3,6 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
-import DataKamar from "./pages/DataKamar";
 import StatusKamar from "./pages/StatusKamar";
 import RiwayatPembersihan from "./pages/RiwayatPembersihan";
 import PembagianMaintenance from "./pages/PembagianMaintenance";
@@ -50,7 +49,6 @@ function App () {
                 <Route path="/dashboard" element={routeLayout('Dashboard', <Dashboard/>)}/>
                 <Route path="/" element={routeLayout('Dashboard', <Dashboard/>)}/>
                 <Route path="/staff" element={routeLayout('Staff', <Staff/>)}/>
-                <Route path="/datakamar" element={routeLayout('Data Kamar', <DataKamar/>)}/>
                 <Route path="/statuskamar" element={routeLayout('Status Kamar', <StatusKamar/>)}/>
                 <Route path="/riwayatpembersihan" element={routeLayout('Riwayat Pembersihan', <RiwayatPembersihan/>)}/>
                 <Route path="/pembagian-maintenance" element={routeLayout('Pembagian Maintenance', <PembagianMaintenance/>)}/>

@@ -7,7 +7,7 @@ import StaffCard from '../components/absensi-logs/StaffCard';
 import LogToolbar from '../components/absensi-logs/LogToolbar';
 import LogCard from '../components/absensi-logs/LogCard';
 import PhotoModal from '../components/absensi-logs/PhotoModal';
-import { groupLogsByPeriod, getAvailablePeriods, CalendarIcon, deduplicateLogsByDate } from '../components/absensi-logs/helpers';
+import { groupLogsByPeriod, getAvailablePeriods, CalendarIcon } from '../components/absensi-logs/helpers';
 
 /* eslint-disable react-hooks/set-state-in-effect */
 
@@ -53,7 +53,7 @@ function AbsensiLogs() {
     setSelectedWeek('all');
     setLogsLoading(true);
     api.get('/attendance/logs', { params: { employee_id: staff.id } })
-      .then((res) => setLogs(deduplicateLogsByDate(res.data.data || [])))
+      .then((res) => setLogs(res.data.data || []))
       .catch(() => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat log absensi.' }))
       .finally(() => setLogsLoading(false));
   }, [searchParams, staffList, user]);
@@ -65,8 +65,7 @@ function AbsensiLogs() {
     setLogsLoading(true);
     try {
       const res = await api.get('/attendance/logs', { params: { employee_id: staff.id } });
-      const rawLogs = res.data.data || [];
-      setLogs(deduplicateLogsByDate(rawLogs));
+      setLogs(res.data.data || []);
     } catch (err) {
       Swal.fire({
         icon: 'error',

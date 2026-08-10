@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { deduplicateLogsByDate } from '../components/absensi-logs/helpers';
 
 const statusConfig = {
   active: { label: 'Sedang Absen', bg: '#dbeafe', color: '#2563eb' },
@@ -37,7 +36,7 @@ function AttendanceLogs() {
     const fetchLogs = async () => {
       try {
         const res = await api.get('/attendance/logs');
-        setLogs(deduplicateLogsByDate(res.data.data || []));
+        setLogs(res.data.data || []);
         setScope(res.data.scope || 'own');
       } catch (err) {
         setError(err.response?.data?.message || 'Gagal memuat riwayat absensi.');
