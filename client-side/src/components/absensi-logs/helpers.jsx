@@ -158,21 +158,6 @@ function CalendarIcon({ className = '' }) {
   );
 }
 
-function deduplicateLogsByDate(logs) {
-  const map = new Map();
-  logs.forEach((log) => {
-    const dateSource = log.status === 'izin' ? log.izin_start_at : log.check_in_at;
-    const dateObj = parseLocalDateTime(dateSource);
-    if (!dateObj || isNaN(dateObj.getTime())) return;
-    const dateKey = `${log.employee_id}-${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
-    const existing = map.get(dateKey);
-    if (!existing || log.id > existing.id) {
-      map.set(dateKey, log);
-    }
-  });
-  return Array.from(map.values()).sort((a, b) => b.id - a.id);
-}
-
 export {
   parseLocalDateTime,
   formatDate,
@@ -180,7 +165,6 @@ export {
   getWeekInfo,
   groupLogsByPeriod,
   getAvailablePeriods,
-  deduplicateLogsByDate,
   statusLabel,
   statusColor,
   StatusBadge,
