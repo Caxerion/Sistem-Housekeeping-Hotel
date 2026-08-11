@@ -16,8 +16,6 @@ import Staff from './pages/Staff';
 import EndAttendance from './pages/Endattendance';
 import AbsensiLogs from './pages/AbsensiLogs';
 import IzinForm from './pages/IzinForm';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './context/ProtectedRoutes';
 
 function MaintenancePage() {
     return <PembagianMaintenance />;
@@ -81,8 +79,7 @@ function App () {
     );
 
     return(
-        <AuthProvider>
-            <Routes>
+        <Routes>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/dashboard" element={routeLayout('Dashboard', <Dashboard/>)}/>
@@ -99,7 +96,6 @@ function App () {
                 <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
                 <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
             </Routes>
-        </AuthProvider>
     )
 }
 

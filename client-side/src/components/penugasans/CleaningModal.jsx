@@ -80,11 +80,25 @@ function CleaningModal({ isOpen, onClose, rooms, form, onFormChange, onSubmit, s
               required
             >
               <option value="">Pilih kamar...</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.room_number} - {room.room_type}
-                </option>
-              ))}
+              {rooms.map((room) => {
+                const isMaintenance = room.occupancy_status === 'maintenance';
+                const statusLabel = isMaintenance
+                  ? ' (Maintenance)'
+                  : room.housekeeping_status === 'dirty'
+                    ? ' (Dirty)'
+                    : room.housekeeping_status === 'cleaning'
+                      ? ' (Cleaning)'
+                      : ' (Clean)';
+                return (
+                  <option
+                    key={room.id}
+                    value={room.id}
+                    disabled={isMaintenance}
+                  >
+                    {room.room_number} - {room.room_type}{statusLabel}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>

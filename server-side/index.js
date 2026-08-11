@@ -14,6 +14,8 @@ const roomLogsRoutes = require('./src/routes/roomLogsRoutes');
 const maintenanceHistoryRoutes = require('./src/routes/maintenanceHistoryRoutes');
 const staffOverviewRoutes = require('./src/routes/staffOverviewRoutes');
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
+const jwt = require('jsonwebtoken');
+const { addClient } = require('./src/utils/sse');
 const PORT = 3000;
 
 const allowedOrigins = [
@@ -51,6 +53,28 @@ app.use('/api/maintenance', require('./src/routes/maintenanceHistoryRoutes'));
 app.use('/api/room-logs', roomLogsRoutes);
 app.use('/api/staff', staffOverviewRoutes);
 app.use('/api/attendance', attendanceRoutes);
+
+app.get('/api/events', (req, res) => {
+  const token = req.query.token;
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Token required' });
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    addClient(res);
+  } catch (err) {
+    return res.status(403).json({ success: false, message: 'Invalid token' });
+  }
+});
+
+app.use((err, req, res, next) => {
+    console.error('[SERVER ERROR]:', err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Terjadi kesalahan pada server.',
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);

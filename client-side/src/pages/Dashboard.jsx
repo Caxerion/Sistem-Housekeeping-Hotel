@@ -78,6 +78,51 @@ function Dashboard() {
   }, [windowOffset]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const eventSource = new EventSource(`http://localhost:3000/api/events?token=${token}`);
+
+    eventSource.addEventListener('connected', () => {
+      console.log('SSE connected');
+    });
+
+    const refreshStats = async () => {
+      try {
+        const res = await api.get('/dashboard/stats');
+        setStats(res.data.data);
+      } catch (err) {
+        console.error('Gagal mengambil stats dashboard:', err);
+      }
+    };
+
+    const refreshTrend = () => {
+      if (windowOffset === 0) {
+        fetchTrend();
+      } else {
+        setWindowOffset(0);
+      }
+    };
+
+    eventSource.addEventListener('schedule:created', refreshStats);
+    eventSource.addEventListener('schedule:started', refreshStats);
+    eventSource.addEventListener('schedule:completed', refreshStats);
+    eventSource.addEventListener('schedule:canceled', refreshStats);
+    eventSource.addEventListener('cleaning:created', refreshStats);
+    eventSource.addEventListener('cleaning:started', refreshStats);
+    eventSource.addEventListener('cleaning:completed', refreshStats);
+    eventSource.addEventListener('cleaning:canceled', refreshStats);
+    eventSource.addEventListener('schedule:created', refreshTrend);
+    eventSource.addEventListener('schedule:started', refreshTrend);
+    eventSource.addEventListener('schedule:completed', refreshTrend);
+    eventSource.addEventListener('schedule:canceled', refreshTrend);
+
+    return () => {
+      eventSource.close();
+    };
+  }, [fetchTrend, windowOffset]);
+
+  useEffect(() => {
     fetchTrend();
   }, [fetchTrend]);
 

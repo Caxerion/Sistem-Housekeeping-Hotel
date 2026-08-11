@@ -58,6 +58,34 @@ function PenugasanPembersihan() {
     return () => clearInterval(interval);
   }, [fetchMySchedule]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const eventSource = new EventSource(`http://localhost:3000/api/events?token=${token}`);
+
+    eventSource.addEventListener('connected', () => {
+      console.log('SSE connected');
+    });
+
+    const refresh = () => {
+      fetchMySchedule();
+    };
+
+    eventSource.addEventListener('cleaning:created', refresh);
+    eventSource.addEventListener('cleaning:started', refresh);
+    eventSource.addEventListener('cleaning:completed', refresh);
+    eventSource.addEventListener('cleaning:canceled', refresh);
+    eventSource.addEventListener('cleaning:staffAssigned', refresh);
+    eventSource.addEventListener('schedule:started', refresh);
+    eventSource.addEventListener('schedule:completed', refresh);
+    eventSource.addEventListener('schedule:canceled', refresh);
+
+    return () => {
+      eventSource.close();
+    };
+  }, [fetchMySchedule]);
+
   const handleStart = async (scheduleId) => {
     const result = await Swal.fire({
       icon: 'question',

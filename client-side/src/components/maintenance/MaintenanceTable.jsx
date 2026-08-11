@@ -1,5 +1,16 @@
 import { StatusBadge } from './MaintenanceBadges';
 
+function formatDate(dateStr) {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 function buildPageTokens(current, total) {
   const delta = 1;
   const tokens = [1];
@@ -99,18 +110,18 @@ function MaintenanceTable({
                         <p className="text-xs text-gray-400 mt-0.5">{sched.notes}</p>
                       )}
                     </td>
-                    <td
-                      className="py-3 px-4 border-b"
-                      style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
-                    >
-                      {sched.scheduled_date || '-'}
-                    </td>
-                    <td
-                      className="py-3 px-4 border-b"
-                      style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
-                    >
-                      {sched.ended_at || '-'}
-                    </td>
+                     <td
+                       className="py-3 px-4 border-b"
+                       style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                     >
+                       {formatDate(sched.scheduled_date) || '-'}
+                     </td>
+                     <td
+                       className="py-3 px-4 border-b"
+                       style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                     >
+                       {formatDate(sched.ended_at) || '-'}
+                     </td>
                     <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
                       <StatusBadge status={sched.status} />
                     </td>

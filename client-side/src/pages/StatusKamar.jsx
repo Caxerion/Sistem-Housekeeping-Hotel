@@ -75,6 +75,7 @@ function StatusKamar() {
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
   const [filter, setFilter] = useState('Semua');
+  const [housekeepingFilter, setHousekeepingFilter] = useState('Semua');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +86,7 @@ function StatusKamar() {
   
   const itemsPerPage = 10;
   const filters = ['Semua', 'Available', 'Occupied', 'Maintenance', 'Reserved'];
+  const housekeepingFilters = ['Semua', 'Clean', 'Dirty', 'Cleaning'];
   
   const canEditRoles = ['Super Admin', 'General Manager', 'Housekeeping Supervisor', 
                         'Front Office Staff', 'Front Office Manager'];
@@ -108,6 +110,35 @@ function StatusKamar() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const eventSource = new EventSource(`http://localhost:3000/api/events?token=${token}`);
+
+    const refresh = () => {
+      api.get('/rooms').then(res => setRooms(res.data.data || [])).catch(console.error);
+    };
+
+    eventSource.addEventListener('connected', () => {
+      console.log('SSE connected');
+    });
+    eventSource.addEventListener('schedule:created', refresh);
+    eventSource.addEventListener('schedule:started', refresh);
+    eventSource.addEventListener('schedule:completed', refresh);
+    eventSource.addEventListener('schedule:canceled', refresh);
+    eventSource.addEventListener('cleaning:created', refresh);
+    eventSource.addEventListener('cleaning:started', refresh);
+    eventSource.addEventListener('cleaning:completed', refresh);
+    eventSource.addEventListener('cleaning:canceled', refresh);
+    eventSource.addEventListener('schedule:staffAssigned', refresh);
+    eventSource.addEventListener('cleaning:staffAssigned', refresh);
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
   const handleEditClick = (room) => {
     if (room?.id) {
       setSelectedRoom(room);
@@ -128,10 +159,11 @@ function StatusKamar() {
 
   const filteredRooms = rooms.filter(room => {
     const matchStatus = filter === 'Semua' || room.occupancy_status === filter.toLowerCase();
+    const matchHousekeeping = housekeepingFilter === 'Semua' || room.housekeeping_status === housekeepingFilter.toLowerCase();
     const searchLower = search.toLowerCase();
     const matchSearch = room.room_number?.toLowerCase().includes(searchLower) ||
                         room.room_type?.toLowerCase().includes(searchLower);
-    return matchStatus && matchSearch;
+    return matchStatus && matchHousekeeping && matchSearch;
   });
 
   const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
@@ -171,7 +203,7 @@ function StatusKamar() {
       <div className="p-6 rounded-xl border" style={{ backgroundColor: '#f9f9fa', borderColor: '#e5e7eb' }}>
         {/* Filter & Search */}
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {filters.map((f) => (
               <button
                 key={f}
@@ -185,6 +217,19 @@ function StatusKamar() {
                 {f}
               </button>
             ))}
+            <select
+              value={housekeepingFilter}
+              onChange={(e) => { setHousekeepingFilter(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-1.5 rounded-full text-sm font-medium border-0 outline-none focus:ring-0"
+              style={{
+                backgroundColor: housekeepingFilter !== 'Semua' ? '#3b82f6' : '#f1f3f5',
+                color: housekeepingFilter !== 'Semua' ? '#ffffff' : '#4b5563',
+              }}
+            >
+              {housekeepingFilters.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex items-center rounded-full px-3 py-1 border bg-white min-w-[240px]" style={{ borderColor: '#e5e7eb' }}>
