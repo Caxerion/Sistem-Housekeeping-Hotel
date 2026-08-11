@@ -10,10 +10,15 @@ const getStaffOverview = asyncHandler(async (req, res) => {
         e.phone,
         CASE
           WHEN EXISTS (
-              SELECT 1 FROM room_maintenance_schedule_staff rss
-              JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
-              WHERE rss.employee_id = e.id
-                AND rms.status = 'in_progress'
+            SELECT 1 FROM room_maintenance_schedule_staff rss
+            JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+            WHERE rss.employee_id = e.id
+              AND rms.status = 'in_progress'
+          ) OR EXISTS (
+            SELECT 1 FROM room_cleaning_schedule_staff rcss
+            JOIN room_cleaning_schedule rcs ON rcs.id = rcss.schedule_id
+            WHERE rcss.employee_id = e.id
+              AND rcs.status = 'in_progress'
           ) THEN 'on_duty'
           WHEN EXISTS (
               SELECT 1 FROM attendance att
@@ -35,14 +40,21 @@ const getStaffOverview = asyncHandler(async (req, res) => {
           ) THEN 'izin'
           ELSE 'offline'
         END AS status,
-        (
-            SELECT r.room_number
-            FROM room_maintenance_schedule_staff rss
-            JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
-            JOIN rooms r ON r.id = rms.room_id
-            WHERE rss.employee_id = e.id
-              AND rms.status = 'in_progress'
-            LIMIT 1
+        COALESCE(
+            (SELECT r.room_number
+             FROM room_maintenance_schedule_staff rss
+             JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+             JOIN rooms r ON r.id = rms.room_id
+             WHERE rss.employee_id = e.id
+               AND rms.status = 'in_progress'
+             LIMIT 1),
+            (SELECT r.room_number
+             FROM room_cleaning_schedule_staff rcss
+             JOIN room_cleaning_schedule rcs ON rcs.id = rcss.schedule_id
+             JOIN rooms r ON r.id = rcs.room_id
+             WHERE rcss.employee_id = e.id
+               AND rcs.status = 'in_progress'
+             LIMIT 1)
         ) AS shift
     FROM employees e
     JOIN positions p ON p.id = e.position_id

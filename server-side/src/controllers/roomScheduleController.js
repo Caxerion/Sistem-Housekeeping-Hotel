@@ -160,7 +160,7 @@ const createSchedule = asyncHandler(async (req, res) => {
 
     if (initialStatus === 'in_progress') {
       await connection.query(
-        `UPDATE rooms SET occupancy_status = 'maintenance' WHERE id = ?`,
+        `UPDATE rooms SET occupancy_status = 'maintenance', housekeeping_status = 'maintenance' WHERE id = ?`,
         [room_id]
       );
     }
@@ -239,7 +239,7 @@ const startSchedule = asyncHandler(async (req, res) => {
   );
 
   await pool.query(
-    `UPDATE rooms SET occupancy_status = 'maintenance' WHERE id = ?`,
+    `UPDATE rooms SET occupancy_status = 'maintenance', housekeeping_status = 'maintenance' WHERE id = ?`,
     [scheduleRows[0].room_id]
   );
 
@@ -275,7 +275,7 @@ const completeSchedule = asyncHandler(async (req, res) => {
 
   if (activeSchedules[0].count === 0) {
     await pool.query(
-      `UPDATE rooms SET occupancy_status = 'available' WHERE id = ?`,
+      `UPDATE rooms SET occupancy_status = 'available', housekeeping_status = 'clean' WHERE id = ?`,
       [roomId]
     );
   }
@@ -312,7 +312,7 @@ const cancelSchedule = asyncHandler(async (req, res) => {
 
   if (activeSchedules[0].count === 0) {
     await pool.query(
-      `UPDATE rooms SET occupancy_status = 'available' WHERE id = ?`,
+      `UPDATE rooms SET occupancy_status = 'available', housekeeping_status = 'dirty' WHERE id = ?`,
       [roomId]
     );
   }

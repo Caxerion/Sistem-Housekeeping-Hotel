@@ -12,6 +12,7 @@ const initialForm = {
   title: '',
   notes: '',
   scheduled_date: '',
+  ended_at: '',
   set_immediately: false,
   staff_ids: [],
 };
@@ -175,6 +176,7 @@ function PembagianMaintenance() {
         title: form.title,
         notes: form.notes,
         scheduled_date: form.scheduled_date,
+        ended_at: form.ended_at,
         set_immediately: form.set_immediately,
         staff_ids: form.staff_ids,
       });
@@ -340,7 +342,6 @@ function PembagianMaintenance() {
         setPageInput={setPageInput}
         handlePageInputKeyDown={handlePageInputKeyDown}
         submitPageInput={submitPageInput}
-        user={user}
         handleStart={handleStart}
         handleComplete={handleComplete}
         handleCancel={handleCancel}
