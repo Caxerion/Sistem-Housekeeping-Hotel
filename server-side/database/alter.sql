@@ -13,7 +13,8 @@ ADD COLUMN housekeeping_status
 ENUM(
     'clean',
     'dirty',
-    'cleaning'
+    'cleaning',
+    'maintenance'
 )
 DEFAULT 'clean'
 AFTER occupancy_status;
