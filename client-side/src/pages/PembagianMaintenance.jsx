@@ -61,6 +61,31 @@ function PembagianMaintenance() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const eventSource = new EventSource(`http://localhost:3000/api/events?token=${token}`);
+
+    eventSource.addEventListener('connected', () => {
+      console.log('SSE connected');
+    });
+
+    const refresh = () => {
+      fetchAll();
+    };
+
+    eventSource.addEventListener('schedule:created', refresh);
+    eventSource.addEventListener('schedule:started', refresh);
+    eventSource.addEventListener('schedule:completed', refresh);
+    eventSource.addEventListener('schedule:canceled', refresh);
+    eventSource.addEventListener('schedule:staffAssigned', refresh);
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
+  useEffect(() => {
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
@@ -78,6 +103,7 @@ function PembagianMaintenance() {
           title: null,
           notes: null,
           scheduled_date: null,
+          ended_at: null,
           status: null,
           started_at: null,
           completed_at: null,

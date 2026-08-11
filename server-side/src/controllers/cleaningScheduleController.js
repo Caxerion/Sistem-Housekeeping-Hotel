@@ -1,11 +1,12 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
+const { broadcast } = require('../utils/sse');
 
 const MIN_PHOTOS = 4;
 
 const getRooms = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(
-    `SELECT r.id, r.room_number, rt.name AS room_type
+    `SELECT r.id, r.room_number, rt.name AS room_type, r.occupancy_status, r.housekeeping_status
        FROM rooms r
        JOIN room_types rt ON rt.id = r.room_type_id
      ORDER BY r.room_number ASC`
@@ -192,6 +193,8 @@ const createCleaningSchedule = asyncHandler(async (req, res) => {
 
     await connection.commit();
 
+    broadcast('cleaning:created', { id: result.insertId, room_id, status: initialStatus });
+
     res.status(201).json({
       success: true,
       message: set_immediately
@@ -266,6 +269,8 @@ const startCleaningSchedule = asyncHandler(async (req, res) => {
     [scheduleRows[0].room_id]
   );
 
+  broadcast('cleaning:started', { id, room_id: scheduleRows[0].room_id });
+
   res.json({ success: true, message: 'Pembersihan dimulai.' });
 });
 
@@ -302,6 +307,8 @@ const completeCleaningSchedule = asyncHandler(async (req, res) => {
     );
   }
 
+  broadcast('cleaning:completed', { id, room_id: roomId });
+
   res.json({ success: true, message: 'Pembersihan selesai. Kamar menjadi Clean.' });
 });
 
@@ -330,6 +337,8 @@ const cancelCleaningSchedule = asyncHandler(async (req, res) => {
     `UPDATE rooms SET housekeeping_status = 'dirty' WHERE id = ?`,
     [roomId]
   );
+
+  broadcast('cleaning:canceled', { id, room_id: roomId });
 
   res.json({ success: true, message: 'Jadwal pembersihan dibatalkan.' });
 });
@@ -383,6 +392,7 @@ const assignStaffToCleaningSchedule = asyncHandler(async (req, res) => {
     }
 
     await connection.commit();
+    broadcast('cleaning:staffAssigned', { id, employee_ids });
     res.json({
       success: true,
       message: 'Petugas berhasil ditugaskan pada jadwal pembersihan.',

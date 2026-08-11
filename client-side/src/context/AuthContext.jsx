@@ -4,11 +4,23 @@ import Swal from 'sweetalert2';
 
 const AuthContext = createContext(null);
 
+function getStoredUser() {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const stored = window.localStorage.getItem('user');
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    window.localStorage.removeItem('user');
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState(getStoredUser);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();

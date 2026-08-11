@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
+const { broadcast } = require('../utils/sse');
 
 const MIN_PHOTOS = 4;
 
@@ -167,6 +168,8 @@ const createSchedule = asyncHandler(async (req, res) => {
 
     await connection.commit();
 
+    broadcast('schedule:created', { id: result.insertId, room_id: room_id, status: initialStatus });
+
     res.status(201).json({
       success: true,
       message: set_immediately
@@ -243,6 +246,8 @@ const startSchedule = asyncHandler(async (req, res) => {
     [scheduleRows[0].room_id]
   );
 
+  broadcast('schedule:started', { id, room_id: scheduleRows[0].room_id });
+
   res.json({ success: true, message: 'Maintenance dimulai. Kamar ditarik dari daftar available.' });
 });
 
@@ -275,10 +280,12 @@ const completeSchedule = asyncHandler(async (req, res) => {
 
   if (activeSchedules[0].count === 0) {
     await pool.query(
-      `UPDATE rooms SET occupancy_status = 'available', housekeeping_status = 'clean' WHERE id = ?`,
+      `UPDATE rooms SET occupancy_status = 'available', housekeeping_status = 'dirty' WHERE id = ?`,
       [roomId]
     );
   }
+
+  broadcast('schedule:completed', { id, room_id: roomId });
 
   res.json({ success: true, message: 'Maintenance selesai. Kamar kembali available.' });
 });
@@ -317,6 +324,8 @@ const cancelSchedule = asyncHandler(async (req, res) => {
     );
   }
 
+  broadcast('schedule:canceled', { id, room_id: roomId });
+
   res.json({ success: true, message: 'Jadwal maintenance dibatalkan.' });
 });
 
@@ -346,9 +355,11 @@ const requestMaintenance = asyncHandler(async (req, res) => {
   const [result] = await pool.query(
     `INSERT INTO room_maintenance_schedule
        (room_id, scheduled_by, requested_by, request_notes, title, scheduled_date, status)
-     VALUES (?, ?, ?, ?, ?, ?, 'scheduled')`,
+    VALUES (?, ?, ?, ?, ?, ?, 'scheduled')`,
     [room_id, null, requestedBy, request_notes || null, 'Permintaan Maintenance', new Date().toISOString().slice(0, 10)]
   );
+
+  broadcast('schedule:created', { id: result.insertId, room_id, status: 'scheduled' });
 
   res.status(201).json({
     success: true,
@@ -407,6 +418,7 @@ const assignStaffToSchedule = asyncHandler(async (req, res) => {
     }
 
     await connection.commit();
+    broadcast('schedule:staffAssigned', { id, employee_ids });
     res.json({
       success: true,
       message: 'Petugas berhasil ditugaskan pada jadwal pembersihan.',
