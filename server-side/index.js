@@ -14,6 +14,8 @@ const roomLogsRoutes = require('./src/routes/roomLogsRoutes');
 const maintenanceHistoryRoutes = require('./src/routes/maintenanceHistoryRoutes');
 const staffOverviewRoutes = require('./src/routes/staffOverviewRoutes');
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
+const inventoryRoutes = require('./src/routes/inventoryRoutes');
+const categoryRoutes = require('./src/routes/categoryRoutes');
 const PORT = 3000;
 
 const allowedOrigins = [
@@ -51,6 +53,8 @@ app.use('/api/maintenance', require('./src/routes/maintenanceHistoryRoutes'));
 app.use('/api/room-logs', roomLogsRoutes);
 app.use('/api/staff', staffOverviewRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
