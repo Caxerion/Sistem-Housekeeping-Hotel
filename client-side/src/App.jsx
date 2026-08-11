@@ -7,7 +7,6 @@ import StatusKamar from "./pages/StatusKamar";
 import RiwayatPembersihan from "./pages/RiwayatPembersihan";
 import PembagianMaintenance from "./pages/PembagianMaintenance";
 import StatusPembersihan from "./pages/StatusPembersihan";
-import Penugasan from "./pages/Penugasan";
 import PenugasanPembersihan from "./pages/PenugasanPembersihan";
 import LogsKamar from "./pages/LogsKamar";
 import Inventory from "./pages/Inventory";
