@@ -45,11 +45,19 @@ const getDashboardStats = asyncHandler(async (req, res) => {
      FROM employees e
      JOIN positions p ON p.id = e.position_id
      WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')
-       AND EXISTS (
-         SELECT 1 FROM room_maintenance_schedule_staff rss
-         JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
-         WHERE rss.employee_id = e.id
-           AND rms.status = 'in_progress'
+       AND (
+         EXISTS (
+           SELECT 1 FROM room_maintenance_schedule_staff rss
+           JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+           WHERE rss.employee_id = e.id
+             AND rms.status = 'in_progress'
+         )
+         OR EXISTS (
+           SELECT 1 FROM room_cleaning_schedule_staff rcss
+           JOIN room_cleaning_schedule rcs ON rcs.id = rcss.schedule_id
+           WHERE rcss.employee_id = e.id
+             AND rcs.status = 'in_progress'
+         )
        )`
   );
 
@@ -58,11 +66,19 @@ const getDashboardStats = asyncHandler(async (req, res) => {
      FROM employees e
      JOIN positions p ON p.id = e.position_id
      WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')
-       AND NOT EXISTS (
-         SELECT 1 FROM room_maintenance_schedule_staff rss
-         JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
-         WHERE rss.employee_id = e.id
-           AND rms.status = 'in_progress'
+       AND NOT (
+         EXISTS (
+           SELECT 1 FROM room_maintenance_schedule_staff rss
+           JOIN room_maintenance_schedule rms ON rms.id = rss.schedule_id
+           WHERE rss.employee_id = e.id
+             AND rms.status = 'in_progress'
+         )
+         OR EXISTS (
+           SELECT 1 FROM room_cleaning_schedule_staff rcss
+           JOIN room_cleaning_schedule rcs ON rcs.id = rcss.schedule_id
+           WHERE rcss.employee_id = e.id
+             AND rcs.status = 'in_progress'
+         )
        )
        AND EXISTS (
          SELECT 1 FROM attendance att
