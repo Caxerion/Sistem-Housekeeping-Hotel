@@ -302,7 +302,7 @@ function PembagianMaintenance() {
           <p className="text-gray-500 mt-2">Jadwalkan dan kelola maintenance kamar.</p>
         </div>
 
-        {user?.current_role === 'admin' && (
+        {user && (
           <button
             onClick={openModal}
             className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors flex items-center gap-2"

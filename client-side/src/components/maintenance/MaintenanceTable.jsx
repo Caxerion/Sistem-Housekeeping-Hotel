@@ -1,4 +1,4 @@
-import { StatusBadge, HousekeepingBadge } from './MaintenanceBadges';
+import { StatusBadge } from './MaintenanceBadges';
 
 function buildPageTokens(current, total) {
   const delta = 1;
@@ -50,7 +50,7 @@ function MaintenanceTable({
           ></i>
           <input
             type="text"
-            placeholder="Cari nama petugas / no. kamar..."
+            placeholder="Cari no. kamar / judul..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
@@ -68,9 +68,8 @@ function MaintenanceTable({
               <tr style={{ color: '#6b7280', fontSize: '0.85rem' }}>
                 <th className="text-left py-3 px-4 font-medium">No. Kamar</th>
                 <th className="text-left py-3 px-4 font-medium">Judul</th>
-                <th className="text-left py-3 px-4 font-medium">Tanggal</th>
-                <th className="text-left py-3 px-4 font-medium">Petugas</th>
-                <th className="text-left py-3 px-4 font-medium">Housekeeping</th>
+                <th className="text-left py-3 px-4 font-medium">Tanggal Mulai</th>
+                <th className="text-left py-3 px-4 font-medium">Tanggal Selesai</th>
                 <th className="text-left py-3 px-4 font-medium">Status</th>
                 <th className="text-left py-3 px-4 font-medium">Aksi</th>
               </tr>
@@ -78,13 +77,13 @@ function MaintenanceTable({
             <tbody>
               {paginatedSchedules.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-4" style={{ color: '#9ca3af' }}>
+                  <td colSpan="6" className="text-center py-4" style={{ color: '#9ca3af' }}>
                     {search.trim() ? 'Tidak ada jadwal yang cocok.' : 'Belum ada jadwal maintenance.'}
                   </td>
                 </tr>
               ) : (
                 paginatedSchedules.map((sched, idx) => (
-                  <tr key={sched.id ?? `empty-${sched.room_id}-${idx}`} style={{ borderColor: '#e5e7eb' }}>
+                  <tr key={sched.schedule_id ?? `empty-${sched.room_id}-${idx}`} style={{ borderColor: '#e5e7eb' }}>
                     <td
                       className="py-3 px-4 border-b font-semibold"
                       style={{ borderColor: '#e5e7eb', color: '#111827' }}
@@ -110,12 +109,7 @@ function MaintenanceTable({
                       className="py-3 px-4 border-b"
                       style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
                     >
-                      {Array.isArray(sched.assigned_staff) && sched.assigned_staff.length > 0
-                        ? sched.assigned_staff.join(', ')
-                        : '-'}
-                    </td>
-                    <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
-                      <HousekeepingBadge status={sched.housekeeping_status} />
+                      {sched.ended_at || '-'}
                     </td>
                     <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
                       <StatusBadge status={sched.status} />
@@ -124,46 +118,34 @@ function MaintenanceTable({
                       <div className="flex gap-2">
                         {sched.status === 'scheduled' && (
                           <>
-                            {(user?.current_role === 'admin' ||
-                              (Array.isArray(sched.assigned_staff_ids) &&
-                                sched.assigned_staff_ids.includes(user?.employee_id))) && (
-                              <button
-                                onClick={() => handleStart(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                              >
-                                Mulai
-                              </button>
-                            )}
-                            {user?.current_role === 'admin' && (
-                              <button
-                                onClick={() => handleCancel(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                Batal
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleStart(sched.schedule_id)}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                            >
+                              Mulai
+                            </button>
+                            <button
+                              onClick={() => handleCancel(sched.schedule_id)}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                            >
+                              Batal
+                            </button>
                           </>
                         )}
                         {sched.status === 'in_progress' && (
                           <>
-                            {(user?.current_role === 'admin' ||
-                              (Array.isArray(sched.assigned_staff_ids) &&
-                                sched.assigned_staff_ids.includes(user?.employee_id))) && (
-                              <button
-                                onClick={() => handleComplete(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                              >
-                                Selesai
-                              </button>
-                            )}
-                            {user?.current_role === 'admin' && (
-                              <button
-                                onClick={() => handleCancel(sched.id)}
-                                className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-                              >
-                                Batal
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleComplete(sched.schedule_id)}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                            >
+                              Selesai
+                            </button>
+                            <button
+                              onClick={() => handleCancel(sched.schedule_id)}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                            >
+                              Batal
+                            </button>
                           </>
                         )}
                         {(sched.status === 'completed' || sched.status === 'canceled' || !sched.status) && (

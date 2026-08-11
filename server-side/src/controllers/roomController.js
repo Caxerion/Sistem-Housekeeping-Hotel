@@ -27,7 +27,6 @@ const updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Ambil cuma field yang ada di body DAN termasuk kolom yang diizinkan
     const fieldsToUpdate = Object.keys(req.body).filter(
       (key) => ALLOWED_FIELDS.includes(key) && req.body[key] !== undefined
     );
@@ -37,6 +36,19 @@ const updateRoom = async (req, res) => {
         success: false,
         message: 'Tidak ada field valid yang dikirim untuk diperbarui.',
       });
+    }
+
+    if (fieldsToUpdate.includes('housekeeping_status')) {
+      const [roomRows] = await pool.query(
+        `SELECT occupancy_status FROM rooms WHERE id = ?`,
+        [id]
+      );
+      if (roomRows.length > 0 && roomRows[0].occupancy_status === 'maintenance') {
+        return res.status(409).json({
+          success: false,
+          message: 'Tidak bisa mengubah housekeeping status kamar yang sedang dalam maintenance.',
+        });
+      }
     }
 
     const setClause = fieldsToUpdate.map((field) => `${field} = ?`).join(', ');

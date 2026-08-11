@@ -7,13 +7,28 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
+const maintenanceUploadDir = path.join(__dirname, '../../uploads/maintenance');
+if (!fs.existsSync(maintenanceUploadDir)) {
+  fs.mkdirSync(maintenanceUploadDir, { recursive: true });
+}
+
+const attendanceStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, `attendance-${unique}${path.extname(file.originalname)}`);
+  },
+});
+
+const maintenanceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, maintenanceUploadDir);
+  },
+  filename: (req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `maintenance-${unique}${path.extname(file.originalname)}`);
   },
 });
 
@@ -27,9 +42,15 @@ const fileFilter = (req, file, cb) => {
 };
 
 const uploadAttendancePhotos = multer({
-  storage,
+  storage: attendanceStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter,
 });
 
-module.exports = { uploadAttendancePhotos };
+const uploadMaintenancePhotos = multer({
+  storage: maintenanceStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter,
+});
+
+module.exports = { uploadAttendancePhotos, uploadMaintenancePhotos };
