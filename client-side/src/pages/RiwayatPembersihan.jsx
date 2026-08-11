@@ -8,16 +8,20 @@ function RiwayatPembersihan() {
   const isAdmin = user?.current_role === 'admin';
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [historyFilter, setHistoryFilter] = useState('pembersihan');
   const [myHistoryOnly, setMyHistoryOnly] = useState(false);
 
   useEffect(() => {
     const fetchCleaningHistory = async () => {
       try {
         const res = await api.get('/maintenance/history');
-        setLogs(res.data.data || []);
+        setLogs(res.data?.data || []);
+        setError(null);
       } catch (err) {
         console.error('Gagal mengambil riwayat pembersihan:', err);
+        setError('Gagal memuat riwayat. Periksa koneksi dan coba lagi.');
       } finally {
         setLoading(false);
       }
@@ -59,21 +63,29 @@ function RiwayatPembersihan() {
   };
 
   // Filter log berdasarkan nomor kamar, nama petugas, atau catatan
-  const filteredLogs = logs.filter((log) => {
-    const query = searchQuery.toLowerCase();
-    const matchesSearch =
-      log.room_number?.toLowerCase().includes(query) ||
-      log.employee_name?.toLowerCase().includes(query) ||
-      (log.action_note && log.action_note.toLowerCase().includes(query));
+  const filteredLogs = logs
+    .filter((log) => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        log.room_number?.toLowerCase().includes(query) ||
+        log.employee_name?.toLowerCase().includes(query) ||
+        (log.action_note && log.action_note.toLowerCase().includes(query));
 
-    const matchesMyHistory = !myHistoryOnly ||
-      (Array.isArray(log.employee_ids) && log.employee_ids.includes(user?.employee_id));
+      const matchesFilter = log.type === historyFilter;
 
-    return matchesSearch && matchesMyHistory;
-  });
+      const matchesMyHistory = !myHistoryOnly ||
+        (Array.isArray(log.employee_ids) && log.employee_ids.includes(user?.employee_id));
+
+      return matchesSearch && matchesFilter && matchesMyHistory;
+    })
+    .sort((a, b) => {
+      if (a.type === b.type) return 0;
+      return a.type === 'pembersihan' ? -1 : 1;
+    });
 
   // Helper untuk format tanggal dan waktu
   const formatDateTime = (dateString) => {
+    if (!dateString) return '-';
     const date = new Date(dateString);
     return date.toLocaleString('id-ID', {
       day: 'numeric',
@@ -98,13 +110,34 @@ function RiwayatPembersihan() {
 
       {/* Search Bar */}
       <div className="bg-white rounded-2xl shadow p-4 mb-6">
-        <input
-          type="text"
-          placeholder="Cari nomor kamar, nama petugas, atau catatan..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        />
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <input
+            type="text"
+            placeholder="Cari nomor kamar, nama petugas, atau catatan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full md:w-2/3 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+          <div className="flex flex-wrap gap-2">
+            {[
+              { key: 'pembersihan', label: 'Pembersihan' },
+              { key: 'maintenance', label: 'Maintenance' },
+            ].map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() => setHistoryFilter(filter.key)}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                  historyFilter === filter.key
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                }`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Logs List Container */}
@@ -142,6 +175,10 @@ function RiwayatPembersihan() {
 
       {loading ? (
         <p className="text-gray-400">Memuat riwayat pembersihan...</p>
+      ) : error ? (
+        <div className="bg-white rounded-2xl shadow p-6 text-center text-red-500 text-sm">
+          {error}
+        </div>
       ) : (
         <div className="space-y-3">
           {filteredLogs.length === 0 ? (
@@ -164,15 +201,36 @@ function RiwayatPembersihan() {
                       {log.room_type || 'Kamar'}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-400">
-                    <i class="fa-regular fa-clock"></i> {formatDateTime(log.cleaned_at)}
-                  </span>
+                  <div className="text-right text-xs text-gray-400">
+                    {log.started_at && (
+                      <div>
+                        <i className="fa-regular fa-clock"></i> Mulai: {formatDateTime(log.started_at)}
+                      </div>
+                    )}
+                    {log.ended_at && (
+                      <div>
+                        <i className="fa-regular fa-clock"></i> Selesai: {formatDateTime(log.ended_at)}
+                      </div>
+                    )}
+                    {!log.started_at && !log.ended_at && log.created_at && (
+                      <div>
+                        <i className="fa-regular fa-clock"></i> Dibuat: {formatDateTime(log.created_at)}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Bottom Section: Employee & Action Note */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-400">Petugas:</span>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                      {log.type === 'maintenance' ? 'Maintenance' : 'Pembersihan'}
+                    </span>
+                    {log.type === 'maintenance' ? (
+                      <span className="text-gray-400">Pencatatan dilakukan oleh:</span>
+                    ) : (
+                      <span className="text-gray-400">Petugas:</span>
+                    )}
                     <span className="font-semibold text-gray-700">
                       {log.employee_name}
                     </span>
@@ -181,7 +239,7 @@ function RiwayatPembersihan() {
                   {log.action_note && (
                     <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-600 mt-2">
                       <span className="font-semibold text-gray-500 block mb-1">
-                        Catatan Pekerjaan:
+                        {log.type === 'maintenance' ? 'Catatan Maintenance' : 'Catatan Pekerjaan'}
                       </span>
                       {log.action_note}
                     </div>

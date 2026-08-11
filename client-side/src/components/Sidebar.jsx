@@ -11,10 +11,12 @@ const menuItems = [
     children: [
       { label: 'Status Kamar', to: '/statuskamar', icon: 'fa-solid fa-door-open' },
       { label: 'Pembagian Maintenance', to: '/pembagian-maintenance', icon: 'fa-solid fa-tools' },
+      { label: 'Status Pembersihan', to: '/status-pembersihan', icon: 'fa-solid fa-broom', roles: ['admin'] },
+      { label: 'Penugasan Pembersihan', to: '/pembagian-pembersihan', icon: 'fa-solid fa-broom', roles: ['staff'] },
       { label: 'Logs Kamar', to: '/logs-kamar', icon: 'fa-solid fa-file-lines' },
     ],
   },
-  { label: 'Riwayat Kebersihan', to: '/riwayatpembersihan', icon: 'fa-solid fa-broom'},
+  { label: 'Riwayat Kebersihan', to: '/riwayatpembersihan', icon: 'fa-solid fa-broom' },
   { label: 'Inventory', to: '/inventory', icon: 'fa-solid fa-box' },
 ];
 
@@ -52,6 +54,16 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [collapsedPopover.open]);
+
+  const filteredMenuItems = menuItems.map((item) => {
+    if (!item.children) return item;
+    return {
+      ...item,
+      children: item.children.filter((child) =>
+        !child.roles || child.roles.includes(user?.current_role)
+      ),
+    };
+  });
 
   return (
     <>
@@ -99,7 +111,7 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
 
       {/* Menu */}
       <nav className="flex flex-col overflow-y-auto mt-4">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           if (item.children) {
             const isOpen = openDropdown === item.label;
             return (
@@ -173,7 +185,7 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
                 {!collapsed && (
                   <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      isOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                      isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
                     <div className="bg-blue-700/30">

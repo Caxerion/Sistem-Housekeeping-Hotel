@@ -220,35 +220,56 @@ CREATE TABLE IF NOT EXISTS cleaning_logs (
     INDEX idx_cleaning_date (cleaned_at)
 );
 
--- Tabel housekeeping_tasks (BUKAN attendance) -> untuk tabel di screenshot ini
-CREATE TABLE housekeeping_tasks (
+-- Tabel housekeeping_tasks diganti dengan sistem jadwal pembersihan yang proper
+CREATE TABLE IF NOT EXISTS room_cleaning_schedule (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
-    employee_id INT NOT NULL,
-    assigned_by INT NOT NULL,
-    status ENUM('scheduled','in_progress','completed','canceled') DEFAULT 'scheduled',
+    scheduled_by INT NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    notes TEXT,
+    scheduled_date DATE NOT NULL,
+    ended_at DATE NULL,
+    status ENUM('scheduled','in_progress','completed','canceled') NOT NULL DEFAULT 'scheduled',
     started_at TIMESTAMP NULL,
     completed_at TIMESTAMP NULL,
+    photos JSON NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT,
+    FOREIGN KEY (scheduled_by) REFERENCES employees(id) ON DELETE RESTRICT,
+    INDEX idx_cleaning_schedule_room (room_id),
+    INDEX idx_cleaning_schedule_date (scheduled_date)
+);
+
+CREATE TABLE IF NOT EXISTS room_cleaning_schedule_staff (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (schedule_id) REFERENCES room_cleaning_schedule(id) ON DELETE CASCADE,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
-    FOREIGN KEY (assigned_by) REFERENCES employees(id) ON DELETE RESTRICT
+    CONSTRAINT unique_cleaning_schedule_staff UNIQUE (schedule_id, employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS room_maintenance_schedule (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
-    scheduled_by INT NOT NULL,          -- staff Housekeeping yang menjadwalkan (biasanya Supervisor)
-    title VARCHAR(150) NOT NULL,        -- contoh: "Perawatan AC berkala", "Cek plumbing kamar"
+    scheduled_by INT NOT NULL,
+    title VARCHAR(150) NOT NULL,
     notes TEXT,
-    scheduled_date DATE NOT NULL,       -- tanggal rencana maintenance dilakukan
+    scheduled_date DATE NOT NULL,
+    ended_at DATE NULL,
     status ENUM('scheduled','in_progress','completed','canceled') NOT NULL DEFAULT 'scheduled',
     started_at TIMESTAMP NULL,
     completed_at TIMESTAMP NULL,
+    photos JSON NULL,
+    request_notes TEXT NULL,
+    requested_by INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT,
     FOREIGN KEY (scheduled_by) REFERENCES employees(id) ON DELETE RESTRICT,
+    FOREIGN KEY (requested_by) REFERENCES employees(id) ON DELETE RESTRICT,
     INDEX idx_schedule_room (room_id),
     INDEX idx_schedule_date (scheduled_date)
 );

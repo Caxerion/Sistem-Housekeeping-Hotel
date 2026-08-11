@@ -196,7 +196,7 @@ const EditButtonStatusKamar = ({
           value={formData.housekeeping_status}
           onChange={handleChange}
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          disabled={loading}
+          disabled={loading || formData.occupancy_status === 'maintenance'}
         >
           <option value="clean">Clean</option>
           <option value="dirty">Dirty</option>
