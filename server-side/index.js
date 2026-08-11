@@ -16,6 +16,7 @@ const staffOverviewRoutes = require('./src/routes/staffOverviewRoutes');
 const attendanceRoutes = require('./src/routes/attendanceRoutes');
 const jwt = require('jsonwebtoken');
 const { addClient } = require('./src/utils/sse');
+const inventoryRoutes = require('./src/routes/inventoryRoutes');
 const PORT = 3000;
 
 const allowedOrigins = [
@@ -53,6 +54,7 @@ app.use('/api/maintenance', require('./src/routes/maintenanceHistoryRoutes'));
 app.use('/api/room-logs', roomLogsRoutes);
 app.use('/api/staff', staffOverviewRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 app.get('/api/events', (req, res) => {
   const token = req.query.token;
