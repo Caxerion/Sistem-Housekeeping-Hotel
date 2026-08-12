@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import Swal from 'sweetalert2';
 import InProgressTaskCard from '../components/penugasans/InProgressTaskCard';
 import ScheduledTaskCard from '../components/penugasans/ScheduledTaskCard';
@@ -17,6 +18,8 @@ function PenugasanPembersihan() {
   const [isCleaningModalOpen, setIsCleaningModalOpen] = useState(false);
   const [cleaningForm, setCleaningForm] = useState({ room_id: '', title: '', notes: '', staff_ids: [] });
   const [cleaningSubmitting, setCleaningSubmitting] = useState(false);
+  const [myAttendance, setMyAttendance] = useState(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
   const fileInputRefs = useRef({});
 
   const inProgressTasks = schedules.filter((s) => s.status === 'in_progress');
@@ -49,6 +52,21 @@ function PenugasanPembersihan() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const fetchMyAttendance = async () => {
+      try {
+        const res = await api.get('/attendance/today');
+        setMyAttendance(res.data.data || null);
+      } catch (err) {
+        console.error('Gagal memuat absensi:', err);
+        setMyAttendance(null);
+      } finally {
+        setAttendanceLoading(false);
+      }
+    };
+    fetchMyAttendance();
   }, []);
 
   useEffect(() => {
@@ -289,6 +307,22 @@ function PenugasanPembersihan() {
   };
 
   const myEmployeeId = user?.employee_id;
+
+  if (user?.current_role === 'staff' && !attendanceLoading && (!myAttendance || myAttendance.status !== 'active')) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Penugasan Pembersihan</h1>
+          <p className="text-gray-500 mt-1">Kelola tugas pembersihan Anda</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow p-8 text-center">
+          <i className="fa-solid fa-lock text-4xl text-gray-300 mb-3"></i>
+          <p className="text-gray-500 mb-2">Anda belum melakukan absensi.</p>
+          <p className="text-sm text-gray-400">Silakan lakukan absensi terlebih dahulu untuk mengakses penugasan pembersihan.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-6">

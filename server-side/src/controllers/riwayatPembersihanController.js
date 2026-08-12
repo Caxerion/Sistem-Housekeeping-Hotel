@@ -12,10 +12,15 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
         rms.created_at,
         rms.started_at,
         rms.completed_at AS ended_at,
+        rms.scheduled_by,
+        e_admin.full_name AS scheduled_by_name,
+        pos.name AS scheduled_by_position,
         'maintenance' AS type
     FROM room_maintenance_schedule rms
     JOIN rooms r ON r.id = rms.room_id
     JOIN room_types rt ON rt.id = r.room_type_id
+    LEFT JOIN employees e_admin ON e_admin.id = rms.scheduled_by
+    LEFT JOIN positions pos ON pos.id = e_admin.position_id
     WHERE rms.status = 'completed'
     `);
 
@@ -29,10 +34,15 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
         rcs.created_at,
         rcs.started_at,
         rcs.completed_at AS ended_at,
+        rcs.scheduled_by,
+        e_admin.full_name AS scheduled_by_name,
+        pos.name AS scheduled_by_position,
         'pembersihan' AS type
     FROM room_cleaning_schedule rcs
     JOIN rooms r ON r.id = rcs.room_id
     JOIN room_types rt ON rt.id = r.room_type_id
+    LEFT JOIN employees e_admin ON e_admin.id = rcs.scheduled_by
+    LEFT JOIN positions pos ON pos.id = e_admin.position_id
     WHERE rcs.status = 'completed'
     `);
 
@@ -78,11 +88,16 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
 
     const data = rows.map((r) => {
         const staff = staffMap[r.id] || { names: [], ids: [] };
+        let employeeName = staff.names.join(', ');
+        if (!employeeName) {
+            const position = r.scheduled_by_position ? ` - ${r.scheduled_by_position}` : '';
+            employeeName = r.scheduled_by_name ? `${r.scheduled_by_name}${position}` : '-';
+        }
         return {
             id: r.id,
             room_number: r.room_number,
             room_type: r.room_type,
-            employee_name: staff.names.join(', ') || '-',
+            employee_name: employeeName,
             employee_ids: staff.ids,
             action_note: [r.title, r.notes].filter(Boolean).join(' — ') || null,
             created_at: r.created_at,

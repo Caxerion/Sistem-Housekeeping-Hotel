@@ -25,6 +25,9 @@ function LogCard({ log, onViewPhotos }) {
             <span className="flex items-center gap-1.5 text-xs text-gray-400 whitespace-nowrap">
               <ClockIcon />
               {formatTime(log.check_in_at)} - {formatTime(log.check_out_at)}
+              {log.check_out_at && formatDate(log.check_out_at) !== formatDate(log.check_in_at) && (
+                <span className="text-gray-500">({formatDate(log.check_out_at)})</span>
+              )}
             </span>
           )}
         </div>

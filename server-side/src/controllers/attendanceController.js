@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
+const { getLocalToday } = require('../utils/dateUtils');
 
 function parseLocalDate(dateStr) {
   if (!dateStr) return null;
@@ -19,7 +20,7 @@ const getMyAttendanceToday = asyncHandler(async (req, res) => {
         FROM attendance a
         JOIN employees e ON e.id = a.employee_id
        WHERE a.employee_id = ?
-         AND DATE(a.check_in_at) = CURDATE()
+         AND a.status = 'active'
        ORDER BY a.id DESC
        LIMIT 1`,
     [employeeId]
@@ -31,6 +32,17 @@ const getMyAttendanceToday = asyncHandler(async (req, res) => {
 // POST /api/attendance/check-in
 const checkIn = asyncHandler(async (req, res) => {
   const employeeId = req.user.employee_id;
+
+  const [existingActive] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (existingActive.length > 0) {
+    return res.status(409).json({
+      success: false,
+      message: 'Anda masih memiliki sesi absensi yang aktif. Selesaikan absensi terlebih dahulu.',
+    });
+  }
 
   const [existing] = await pool.query(
     `SELECT check_out_at FROM attendance
@@ -162,12 +174,20 @@ const submitIzinDirect = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Tanggal mulai izin wajib diisi.' });
   }
 
-  const [existingToday] = await pool.query(
-    `SELECT id FROM attendance WHERE employee_id = ? AND DATE(check_in_at) = CURDATE() AND status IN ('active', 'izin')`,
+  const [existingActive] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
     [employeeId]
   );
+  if (existingActive.length > 0) {
+    return res.status(409).json({ success: false, message: 'Anda masih memiliki sesi absensi yang aktif. Selesaikan absensi terlebih dahulu.' });
+  }
+
+  const [existingToday] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND DATE(check_in_at) = ? AND status IN ('izin')`,
+    [employeeId, getLocalToday()]
+  );
   if (existingToday.length > 0) {
-    return res.status(409).json({ success: false, message: 'Anda sudah memiliki catatan absensi/izin hari ini.' });
+    return res.status(409).json({ success: false, message: 'Anda sudah memiliki catatan izin hari ini.' });
   }
 
   let izinStart = parseLocalDate(start_date);

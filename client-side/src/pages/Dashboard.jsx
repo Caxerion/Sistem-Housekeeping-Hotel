@@ -39,7 +39,7 @@ function Dashboard() {
   const [trend, setTrend] = useState([]);
   const [trendLoading, setTrendLoading] = useState(true);
   const [windowOffset, setWindowOffset] = useState(0);
-  const [trendPeriod, setTrendPeriod] = useState('');
+  const [trendType, setTrendType] = useState('maintenance');
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60 * 1000);
@@ -65,17 +65,16 @@ function Dashboard() {
   const fetchTrend = useCallback(async () => {
     setTrendLoading(true);
     try {
-      const res = await api.get('/dashboard/maintenance-trend', {
-        params: { days: 14, offset: windowOffset },
+      const res = await api.get('/dashboard/trend', {
+        params: { type: trendType, days: 14, offset: windowOffset },
       });
       setTrend(res.data.data || []);
-      setTrendPeriod(res.data.period || '');
     } catch (err) {
-      console.error('Gagal mengambil tren maintenance:', err);
+      console.error('Gagal mengambil tren:', err);
     } finally {
       setTrendLoading(false);
     }
-  }, [windowOffset]);
+  }, [windowOffset, trendType]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -116,6 +115,10 @@ function Dashboard() {
     eventSource.addEventListener('schedule:started', refreshTrend);
     eventSource.addEventListener('schedule:completed', refreshTrend);
     eventSource.addEventListener('schedule:canceled', refreshTrend);
+    eventSource.addEventListener('cleaning:created', refreshTrend);
+    eventSource.addEventListener('cleaning:started', refreshTrend);
+    eventSource.addEventListener('cleaning:completed', refreshTrend);
+    eventSource.addEventListener('cleaning:canceled', refreshTrend);
 
     return () => {
       eventSource.close();
@@ -270,16 +273,31 @@ function Dashboard() {
         </div>
       )}
 
-      {/* ===== Bar Chart: Tren Kamar Maintenance per Hari ===== */}
+      {/* ===== Bar Chart: Tren Pembersihan per Hari ===== */}
       <div className="bg-white rounded-2xl shadow p-6">
         <div className="mb-4 flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h2 className="text-base font-semibold text-gray-800">Tren Kamar Maintenance</h2>
+            <h2 className="text-base font-semibold text-gray-800">
+              {trendType === 'cleaning' ? 'Tren Pembersihan' : 'Tren Maintenance'}
+            </h2>
             <p className="text-sm text-gray-500">
-              Jumlah kamar yang dijadwalkan maintenance per hari — 14 hari per periode
+              {trendType === 'cleaning'
+                ? 'Jumlah jadwal pembersihan per hari — 14 hari per periode'
+                : 'Jumlah jadwal maintenance per hari — 14 hari per periode'}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <select
+              value={trendType}
+              onChange={(e) => {
+                setTrendType(e.target.value);
+                setWindowOffset(0);
+              }}
+              className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white outline-none focus:border-blue-500"
+            >
+              <option value="maintenance">Maintenance</option>
+              <option value="cleaning">Pembersihan</option>
+            </select>
             <button
               type="button"
               onClick={() => setWindowOffset((prev) => Math.max(prev + 1, 0))}
@@ -287,18 +305,15 @@ function Dashboard() {
               aria-label="Periode sebelumnya"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
+                <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            <span className="text-xs font-medium text-gray-500 min-w-[120px] text-center">
-              {trendPeriod || '14 hari terakhir'}
-            </span>
             <button
               type="button"
               onClick={() => setWindowOffset((prev) => Math.max(prev - 1, 0))}
-              disabled={windowOffset === 0}
               className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               aria-label="Periode berikutnya"
+              disabled={windowOffset <= 0}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
@@ -309,10 +324,6 @@ function Dashboard() {
 
         {trendLoading ? (
           <p className="text-gray-400 text-sm">Memuat grafik...</p>
-        ) : trend.every((t) => t.total === 0) ? (
-          <p className="text-gray-400 text-sm py-8 text-center">
-            Belum ada data maintenance pada periode ini.
-          </p>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={trend} margin={{ top: 8, right: 16, left: -16, bottom: 0 }}>
@@ -337,12 +348,14 @@ function Dashboard() {
                   return (
                     <div className="bg-white rounded-lg shadow-md border border-gray-100 px-3 py-2 text-sm">
                       <p className="text-gray-500 text-xs mb-1">{formatShortDate(label)}</p>
-                      <p className="text-amber-600 font-semibold">{payload[0].value} kamar masuk maintenance</p>
+                      <p className={`font-semibold ${trendType === 'cleaning' ? 'text-cyan-600' : 'text-amber-600'}`}>
+                        {payload[0].value} {trendType === 'cleaning' ? 'jadwal pembersihan' : 'kamar masuk maintenance'}
+                      </p>
                     </div>
                   );
                 }}
               />
-              <Bar dataKey="total" fill="#d97706" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total" fill={trendType === 'cleaning' ? '#06b6d4' : '#d97706'} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
