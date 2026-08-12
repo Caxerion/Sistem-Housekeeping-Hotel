@@ -1,6 +1,7 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
 const { broadcast } = require('../utils/sse');
+const { getLocalToday } = require('../utils/dateUtils');
 
 const MIN_PHOTOS = 4;
 
@@ -15,6 +16,7 @@ const getRooms = asyncHandler(async (req, res) => {
 });
 
 const getHousekeepingStaff = asyncHandler(async (req, res) => {
+  const today = getLocalToday();
   const [rows] = await pool.query(`
     SELECT
       e.id AS employee_id,
@@ -24,14 +26,17 @@ const getHousekeepingStaff = asyncHandler(async (req, res) => {
         WHEN EXISTS (
           SELECT 1 FROM attendance att
           WHERE att.employee_id = e.id
-            AND DATE(att.check_in_at) = CURDATE()
             AND att.status = 'active'
         ) THEN 'standby'
         WHEN EXISTS (
           SELECT 1 FROM attendance att
           WHERE att.employee_id = e.id
-            AND DATE(att.check_in_at) = CURDATE()
+            AND DATE(att.check_in_at) = ?
             AND att.status IN ('completed', 'izin')
+        ) AND NOT EXISTS (
+          SELECT 1 FROM attendance att2
+          WHERE att2.employee_id = e.id
+            AND att2.status = 'active'
         ) THEN 'active_today'
         ELSE NULL
       END AS attendance_status
@@ -39,7 +44,7 @@ const getHousekeepingStaff = asyncHandler(async (req, res) => {
     JOIN positions p ON p.id = e.position_id
     WHERE p.name IN ('Housekeeping Supervisor', 'Housekeeping Staff')
     ORDER BY p.name, e.full_name
-  `);
+  `, [today]);
   res.json({ success: true, data: rows });
 });
 
@@ -129,6 +134,16 @@ const getAllCleaningSchedules = asyncHandler(async (req, res) => {
 });
 
 const createCleaningSchedule = asyncHandler(async (req, res) => {
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const {
     room_id,
     title,
@@ -211,6 +226,16 @@ const createCleaningSchedule = asyncHandler(async (req, res) => {
 });
 
 const updateCleaningSchedule = asyncHandler(async (req, res) => {
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const { id } = req.params;
   const { title, notes, scheduled_date, ended_at } = req.body;
 
@@ -246,6 +271,16 @@ const updateCleaningSchedule = asyncHandler(async (req, res) => {
 });
 
 const startCleaningSchedule = asyncHandler(async (req, res) => {
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const { id } = req.params;
   const [scheduleRows] = await pool.query(
     `SELECT room_id, status FROM room_cleaning_schedule WHERE id = ?`,
@@ -275,6 +310,16 @@ const startCleaningSchedule = asyncHandler(async (req, res) => {
 });
 
 const completeCleaningSchedule = asyncHandler(async (req, res) => {
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const { id } = req.params;
   const [scheduleRows] = await pool.query(
     `SELECT room_id FROM room_cleaning_schedule WHERE id = ? AND status = 'in_progress'`,
@@ -313,6 +358,16 @@ const completeCleaningSchedule = asyncHandler(async (req, res) => {
 });
 
 const cancelCleaningSchedule = asyncHandler(async (req, res) => {
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const { id } = req.params;
   const [scheduleRows] = await pool.query(
     `SELECT room_id FROM room_cleaning_schedule WHERE id = ? AND status = 'scheduled'`,
@@ -346,6 +401,15 @@ const cancelCleaningSchedule = asyncHandler(async (req, res) => {
 const assignStaffToCleaningSchedule = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { employee_ids } = req.body;
+  const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
 
   if (!Array.isArray(employee_ids) || employee_ids.length === 0) {
     return res.status(400).json({
@@ -409,6 +473,14 @@ const uploadCleaningPhotos = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const employeeId = req.user.employee_id;
 
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
+
   const [scheduleRows] = await pool.query(
     `SELECT id, status, photos FROM room_cleaning_schedule WHERE id = ?`,
     [id]
@@ -450,6 +522,14 @@ const uploadCleaningPhotos = asyncHandler(async (req, res) => {
 
 const getMyCleaningSchedule = asyncHandler(async (req, res) => {
   const employeeId = req.user.employee_id;
+
+  const [attendanceRows] = await pool.query(
+    `SELECT id FROM attendance WHERE employee_id = ? AND status = 'active' LIMIT 1`,
+    [employeeId]
+  );
+  if (attendanceRows.length === 0) {
+    return res.status(403).json({ success: false, message: 'Anda belum melakukan absensi. Silakan absen terlebih dahulu.' });
+  }
 
   const [rows] = await pool.query(`
     SELECT

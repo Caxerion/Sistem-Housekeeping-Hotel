@@ -10,6 +10,7 @@ const api = axios.create({
     },
 });
 
+let isLoggingOut = false;
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -22,7 +23,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && !isLoggingOut) {
+            isLoggingOut = true;
             localStorage.removeItem('token');
             localStorage.removeItem('user');
 
@@ -32,8 +34,10 @@ api.interceptors.response.use(
                 text: 'Sesi login Anda telah berakhir. Silahkan login kembali.',
                 confirmButtonText: 'Login',
                 confirmationButtonColor: '#3085d6',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
             }).then(() => {
-            window.location.href = '/login';
+                window.location.href = '/login';
             });
         }
         return Promise.reject(error);

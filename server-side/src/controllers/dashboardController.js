@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { asyncHandler } = require('../utils/asyncHandler');
+const { getLocalToday } = require('../utils/dateUtils');
 
 function formatShortDate(dateStr) {
   const [year, month, day] = dateStr.split('-');
@@ -36,8 +37,7 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const [staffRows] = await pool.query(
     `SELECT COUNT(DISTINCT employee_id) AS total
      FROM attendance
-     WHERE DATE(check_in_at) = CURDATE()
-       AND status = 'active'`
+     WHERE status = 'active'`
   );
 
   const [staffOnDutyRows] = await pool.query(
@@ -83,7 +83,6 @@ const getDashboardStats = asyncHandler(async (req, res) => {
        AND EXISTS (
          SELECT 1 FROM attendance att
          WHERE att.employee_id = e.id
-           AND DATE(att.check_in_at) = CURDATE()
            AND att.status = 'active'
        )`
   );
@@ -102,23 +101,26 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   res.json({ success: true, data: stats });
 });
 
-// GET /api/dashboard/maintenance-trend?days=14&offset=0
+// GET /api/dashboard/trend?type=maintenance&days=14&offset=0
+// type: maintenance | cleaning
 // offset=0 : 14 hari terakhir (termasuk hari ini)
 // offset=1 : 14 hari sebelum itu, dst.
-// Menghitung berapa jadwal maintenance DIBUAT per hari (created_at),
-// bukan berdasarkan started_at. Hari tanpa data tetap muncul dengan nilai 0.
-const getMaintenanceTrend = asyncHandler(async (req, res) => {
+// Menghitung berapa jadwal DIBUAT per hari (created_at).
+// Hari tanpa data tetap muncul dengan nilai 0.
+const getTrend = asyncHandler(async (req, res) => {
+  const type = req.query.type === 'cleaning' ? 'cleaning' : 'maintenance';
   const days = Math.min(parseInt(req.query.days, 10) || 14, 90);
   const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
 
+  const table = type === 'cleaning' ? 'room_cleaning_schedule' : 'room_maintenance_schedule';
   const [rows] = await pool.query(
     `SELECT DATE(created_at) AS date, COUNT(*) AS total
-       FROM room_maintenance_schedule
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-        AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+       FROM ${table}
+      WHERE created_at >= DATE_SUB(?, INTERVAL ? DAY)
+        AND created_at < DATE_ADD(?, INTERVAL 1 DAY)
       GROUP BY DATE(created_at)
       ORDER BY date ASC`,
-    [offset + days - 1]
+    [getLocalToday(), offset + days - 1, getLocalToday()]
   );
 
   const countMap = {};
@@ -142,4 +144,4 @@ const getMaintenanceTrend = asyncHandler(async (req, res) => {
   res.json({ success: true, data: trend, period: `${formatShortDate(toLocalDateStr(startBoundary))} — ${formatShortDate(toLocalDateStr(endBoundary))}` });
 });
 
-module.exports = { getDashboardStats, getMaintenanceTrend };
+module.exports = { getDashboardStats, getTrend };
