@@ -181,6 +181,40 @@ function PenugasanPembersihan() {
     }
   };
 
+  const handleDeletePhoto = async (scheduleId, photoPath) => {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Hapus foto?',
+      text: 'Foto yang dihapus tidak dapat dikembalikan.',
+      showConfirmButton: true,
+      confirmButtonText: 'Ya, hapus',
+      cancelButtonText: 'Batal',
+      showCancelButton: true,
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/cleaning-schedule/${scheduleId}/photos`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ photo: photoPath }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message, timer: 1000, showConfirmButton: false });
+        fetchMySchedule();
+      } else {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+      }
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Gagal', text: err.message });
+    }
+  };
+
   const openCleaningModal = () => {
     const myId = Number(user?.employee_id);
     setCleaningForm({
@@ -365,6 +399,7 @@ function PenugasanPembersihan() {
                     uploading={uploading}
                     fileInputRefs={fileInputRefs}
                     onUploadPhotos={handleUploadPhotos}
+                    onDeletePhoto={handleDeletePhoto}
                     onComplete={handleComplete}
                     parsePhotos={parsePhotos}
                     getTimeAgo={getTimeAgo}

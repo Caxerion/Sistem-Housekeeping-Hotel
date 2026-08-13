@@ -508,7 +508,24 @@ const uploadCleaningPhotos = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Tidak ada foto yang diupload.' });
   }
 
-  const existingPhotos = scheduleRows[0].photos ? JSON.parse(scheduleRows[0].photos) : [];
+  let existingPhotos = [];
+  const rawPhotos = scheduleRows[0].photos;
+  if (rawPhotos) {
+    if (Array.isArray(rawPhotos)) {
+      existingPhotos = rawPhotos;
+    } else if (typeof rawPhotos === 'string') {
+      const trimmed = rawPhotos.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          existingPhotos = JSON.parse(trimmed);
+        } catch {
+          existingPhotos = [trimmed];
+        }
+      } else {
+        existingPhotos = [trimmed];
+      }
+    }
+  }
   const newPhotos = req.files.map((file) => `/uploads/maintenance/${file.filename}`);
   const updatedPhotos = [...existingPhotos, ...newPhotos];
 
@@ -518,6 +535,51 @@ const uploadCleaningPhotos = asyncHandler(async (req, res) => {
   );
 
   res.json({ success: true, message: 'Foto berhasil diupload.', photos: updatedPhotos });
+});
+
+const deleteCleaningPhoto = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { photo } = req.body;
+
+  if (!photo || typeof photo !== 'string') {
+    return res.status(400).json({ success: false, message: 'Photo path harus dikirim.' });
+  }
+
+  const [scheduleRows] = await pool.query(
+    `SELECT photos FROM room_cleaning_schedule WHERE id = ?`,
+    [id]
+  );
+
+  if (scheduleRows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
+  }
+
+  let existingPhotos = [];
+  const rawPhotos = scheduleRows[0].photos;
+  if (rawPhotos) {
+    if (Array.isArray(rawPhotos)) {
+      existingPhotos = rawPhotos;
+    } else if (typeof rawPhotos === 'string') {
+      const trimmed = rawPhotos.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          existingPhotos = JSON.parse(trimmed);
+        } catch {
+          existingPhotos = [trimmed];
+        }
+      } else {
+        existingPhotos = [trimmed];
+      }
+    }
+  }
+
+  const filteredPhotos = existingPhotos.filter((p) => p !== photo);
+  await pool.query(
+    `UPDATE room_cleaning_schedule SET photos = ? WHERE id = ?`,
+    [JSON.stringify(filteredPhotos), id]
+  );
+
+  res.json({ success: true, message: 'Foto berhasil dihapus.', photos: filteredPhotos });
 });
 
 const getMyCleaningSchedule = asyncHandler(async (req, res) => {
@@ -585,5 +647,6 @@ module.exports = {
   cancelCleaningSchedule,
   assignStaffToCleaningSchedule,
   uploadCleaningPhotos,
+  deleteCleaningPhoto,
   getMyCleaningSchedule,
 };
