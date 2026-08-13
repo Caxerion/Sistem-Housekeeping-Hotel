@@ -181,12 +181,22 @@ function Inventory() {
           <h1 className="text-2xl font-bold text-gray-800">Inventory</h1>
           <p className="text-sm text-gray-500 mt-1">Kelola stok dan riwayat pengambilan barang</p>
         </div>
-        <button
-          onClick={openTakeModal}
-          className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <span className="text-lg leading-none">+</span> Lakukan Pengambilan
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openTakeModal}
+            className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <span className="text-lg leading-none">+</span> Lakukan Pengambilan
+          </button>
+          {user?.current_role === 'admin' && (
+            <a
+              href="/inventory/master-data"
+              className="rounded-lg bg-gray-800 px-4 py-2.5 font-semibold text-white hover:bg-gray-900 transition-colors flex items-center gap-2"
+            >
+              <i className="fa-solid fa-database"></i> Master Data
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Filter & Search Bar */}

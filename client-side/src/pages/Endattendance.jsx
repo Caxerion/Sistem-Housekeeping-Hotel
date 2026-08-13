@@ -11,6 +11,7 @@ function EndAttendance() {
 
   const [attendance, setAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasInProgressTask, setHasInProgressTask] = useState(false);
 
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState([]); // File[]
@@ -22,11 +23,26 @@ function EndAttendance() {
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        const res = await api.get('/attendance/today');
-        if (res.data.data && String(res.data.data.id) === String(id)) {
-          setAttendance(res.data.data);
+        const [attendanceRes, cleaningRes, maintenanceRes] = await Promise.all([
+          api.get('/attendance/today'),
+          api.get('/cleaning-schedule/my-schedule').catch(() => ({ data: { data: [] } })),
+          api.get('/room-schedule/my-schedule').catch(() => ({ data: { data: [] } })),
+        ]);
+        
+        if (attendanceRes.data.data && String(attendanceRes.data.data.id) === String(id)) {
+          setAttendance(attendanceRes.data.data);
         } else {
           setError('Sesi absensi ini tidak ditemukan atau bukan milik Anda.');
+        }
+
+        const cleaningTasks = cleaningRes.data.data || [];
+        const maintenanceTasks = maintenanceRes.data.data || [];
+        const inProgressCleaning = cleaningTasks.filter(t => t.status === 'in_progress');
+        const inProgressMaintenance = maintenanceTasks.filter(t => t.status === 'in_progress');
+        const totalInProgress = inProgressCleaning.length + inProgressMaintenance.length;
+        
+        if (totalInProgress > 0) {
+          setHasInProgressTask(true);
         }
       } catch {
         setError('Gagal memuat data absensi.');
@@ -100,6 +116,19 @@ function EndAttendance() {
       setError(err.response?.data?.message || 'Gagal mengakhiri absensi.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleEndAttendanceClick = () => {
+    if (hasInProgressTask) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Penugasan Belum Selesai',
+        text: 'Anda masih memiliki penugasan pembersihan/maintenance yang sedang berjalan. Selesaikan penugasan terlebih dahulu sebelum mengakhiri absensi.',
+        confirmButtonText: 'Mengerti',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
     }
   };
 
@@ -207,11 +236,12 @@ function EndAttendance() {
 
           <div className="flex items-center gap-3 pt-2">
             <button
-              type="submit"
+              type="button"
+              onClick={hasInProgressTask ? handleEndAttendanceClick : handleSubmit}
               disabled={submitting}
               className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:opacity-70 transition-colors"
             >
-              {submitting ? 'Menyimpan...' : 'Selesaikan Absensi'}
+              {submitting ? 'Menyimpan...' : hasInProgressTask ? 'Selesaikan Penugasan Terlebih Dahulu' : 'Selesaikan Absensi'}
             </button>
           </div>
         </form>

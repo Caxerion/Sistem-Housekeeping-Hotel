@@ -52,6 +52,40 @@ const createItem = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, message: 'Barang berhasil ditambahkan.', data: { id: result.insertId } });
 });
 
+const updateItem = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { category_id, name, unit, current_stock, minimum_stock } = req.body;
+
+  if (!category_id || !name || !unit) {
+    return res.status(400).json({ success: false, message: 'category_id, name, dan unit wajib diisi.' });
+  }
+
+  const [existing] = await pool.query(`SELECT id FROM inventory_items WHERE id = ?`, [id]);
+  if (existing.length === 0) {
+    return res.status(404).json({ success: false, message: 'Barang tidak ditemukan.' });
+  }
+
+  await pool.query(
+    `UPDATE inventory_items SET category_id = ?, name = ?, unit = ?, current_stock = ?, minimum_stock = ? WHERE id = ?`,
+    [category_id, name, unit, current_stock || 0, minimum_stock || 0, id]
+  );
+
+  res.json({ success: true, message: 'Barang berhasil diperbarui.' });
+});
+
+const deleteItem = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const [existing] = await pool.query(`SELECT id FROM inventory_items WHERE id = ?`, [id]);
+  if (existing.length === 0) {
+    return res.status(404).json({ success: false, message: 'Barang tidak ditemukan.' });
+  }
+
+  await pool.query(`DELETE FROM inventory_items WHERE id = ?`, [id]);
+
+  res.json({ success: true, message: 'Barang berhasil dihapus.' });
+});
+
 const updateStock = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { quantity } = req.body;
@@ -190,6 +224,8 @@ module.exports = {
   getAllItems,
   getLowStockItems,
   createItem,
+  updateItem,
+  deleteItem,
   updateStock,
   addStock,
   createTaking,

@@ -10,6 +10,7 @@ import StatusPembersihan from "./pages/StatusPembersihan";
 import PenugasanPembersihan from "./pages/PenugasanPembersihan";
 import LogsKamar from "./pages/LogsKamar";
 import Inventory from "./pages/Inventory";
+import InventoryMasterData from "./pages/InventoryMasterData";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Staff from './pages/Staff';
@@ -60,7 +61,6 @@ function App () {
 
     const sidebarWidth = sidebarCollapsed ? 'md:ml-16' : 'md:ml-56';
 
-    const toggleMobileSidebar = () => setMobileSidebarOpen((prev) => !prev);
     const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
     const routeLayout = (pageTitle, children) => (
@@ -90,6 +90,7 @@ function App () {
                 <Route path="/status-pembersihan" element={routeLayout('Status Pembersihan', <StatusPembersihanPage/>)}/>
                 <Route path="/pembagian-pembersihan" element={routeLayout('Penugasan Pembersihan', <CleaningPage/>)}/>
                 <Route path="/inventory" element={routeLayout('Inventory', <Inventory/>)}/>
+                <Route path="/inventory/master-data" element={routeLayout('Master Data Inventory', <InventoryMasterData/>)}/>
                 <Route path="/riwayatpembersihan" element={routeLayout('Riwayat Kebersihan', <RiwayatPembersihan/>)}/>
                 <Route path="/logs-kamar" element={routeLayout('Logs Kamar', <LogsKamar/>)}/>
                 <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>

@@ -4,6 +4,8 @@ const {
   getAllItems,
   getLowStockItems,
   createItem,
+  updateItem,
+  deleteItem,
   updateStock,
   addStock,
   createTaking,
@@ -17,6 +19,8 @@ router.use(verifyRole(['admin', 'staff']));
 router.get('/', getAllItems);
 router.get('/low-stock', getLowStockItems);
 router.post('/', createItem);
+router.put('/:id', updateItem);
+router.delete('/:id', deleteItem);
 router.patch('/:id/stock', updateStock);
 router.post('/items/:id/add-stock', addStock);
 router.post('/takings', createTaking);
