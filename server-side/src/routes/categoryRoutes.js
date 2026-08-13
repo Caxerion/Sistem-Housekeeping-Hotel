@@ -1,23 +1,19 @@
-const db = require('../config/db');
+const express = require('express');
+const router = express.Router();
+const {
+  getAllCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} = require('../controllers/categoryController');
+const { verifyToken, verifyRole } = require('../middlewares/auth');
 
-exports.getAllCategories = async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM inventory_categories');
-    res.json({ status: 'success', data: rows });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-};
+router.use(verifyToken);
+router.use(verifyRole(['admin']));
 
-exports.createCategory = async (req, res) => {
-  const { name, description } = req.body;
-  try {
-    const [result] = await db.query(
-      'INSERT INTO inventory_categories (name, description) VALUES (?, ?)',
-      [name, description]
-    );
-    res.status(201).json({ status: 'success', id: result.insertId, message: 'Category created' });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-};
+router.get('/', getAllCategories);
+router.post('/', createCategory);
+router.put('/:id', updateCategory);
+router.delete('/:id', deleteCategory);
+
+module.exports = router;

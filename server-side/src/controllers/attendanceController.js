@@ -107,6 +107,32 @@ const checkOut = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'Sesi absensi aktif tidak ditemukan.' });
   }
 
+  const [cleaningInProgress] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM room_cleaning_schedule_staff rcss
+     JOIN room_cleaning_schedule rcs ON rcs.id = rcss.schedule_id
+     WHERE rcss.employee_id = ?
+       AND rcs.status = 'in_progress'`,
+    [employeeId]
+  );
+
+  const [maintenanceInProgress] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM room_maintenance_schedule_staff rmss
+     JOIN room_maintenance_schedule rms ON rms.id = rmss.schedule_id
+     WHERE rmss.employee_id = ?
+       AND rms.status = 'in_progress'`,
+    [employeeId]
+  );
+
+  const totalInProgress = (cleaningInProgress[0]?.total || 0) + (maintenanceInProgress[0]?.total || 0);
+  if (totalInProgress > 0) {
+    return res.status(409).json({
+      success: false,
+      message: `Anda masih memiliki ${totalInProgress} penugasan pembersihan/maintenance yang sedang berjalan. Selesaikan penugasan terlebih dahulu sebelum mengakhiri absensi.`,
+    });
+  }
+
   const photoUrls = (req.files || []).map((file) => `/uploads/attendance/${file.filename}`);
 
   await pool.query(
