@@ -244,6 +244,15 @@ function RiwayatPembersihan() {
                       {log.action_note}
                     </div>
                   )}
+
+                  {log.inspection_note && log.inspection_status === 'approved' && (
+                    <div className="bg-green-50 rounded-xl p-3 text-xs text-green-700 mt-2">
+                      <span className="font-semibold text-green-600 block mb-1">
+                        Catatan Supervisor
+                      </span>
+                      {log.inspection_note}
+                    </div>
+                  )}
                 </div>
               </div>
             ))

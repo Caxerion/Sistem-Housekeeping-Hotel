@@ -37,6 +37,8 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
         rcs.scheduled_by,
         e_admin.full_name AS scheduled_by_name,
         pos.name AS scheduled_by_position,
+        rcs.inspection_status,
+        rcs.inspection_note,
         'pembersihan' AS type
     FROM room_cleaning_schedule rcs
     JOIN rooms r ON r.id = rcs.room_id
@@ -93,17 +95,23 @@ const getRiwayatPembersihan = asyncHandler(async (req, res) => {
             const position = r.scheduled_by_position ? ` - ${r.scheduled_by_position}` : '';
             employeeName = r.scheduled_by_name ? `${r.scheduled_by_name}${position}` : '-';
         }
+        const actionParts = [r.title, r.notes].filter(Boolean);
+        if (r.inspection_note && r.inspection_status === 'approved') {
+            actionParts.push(`Catatan supervisor: ${r.inspection_note}`);
+        }
         return {
             id: r.id,
             room_number: r.room_number,
             room_type: r.room_type,
             employee_name: employeeName,
             employee_ids: staff.ids,
-            action_note: [r.title, r.notes].filter(Boolean).join(' — ') || null,
+            action_note: actionParts.join(' — ') || null,
             created_at: r.created_at,
             started_at: r.started_at,
             ended_at: r.ended_at,
             type: r.type,
+            inspection_status: r.inspection_status,
+            inspection_note: r.inspection_note,
         };
     });
 
