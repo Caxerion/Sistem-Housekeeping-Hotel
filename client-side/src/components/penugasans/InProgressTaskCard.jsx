@@ -1,7 +1,10 @@
-function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUploadPhotos, onDeletePhoto, onComplete, onCancel, parsePhotos, getTimeAgo, minPhotos, showCancel = false, completeButtonText = 'Selesaikan', cancelButtonText = 'Batalkan Pembersihan' }) {
+function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUploadPhotos, onDeletePhoto, onComplete, onRevertSubmit, onCancel, parsePhotos, getTimeAgo, minPhotos, showCancel = false, completeButtonText = 'Selesaikan', cancelButtonText = 'Batalkan Pembersihan' }) {
   const photos = parsePhotos(task.photos);
   const staffNames = Array.isArray(task.assigned_staff) ? task.assigned_staff : [];
   const staffIds = Array.isArray(task.assigned_staff_ids) ? task.assigned_staff_ids : [];
+  const isPendingInspection = task.inspection_status === 'pending';
+  const isRevision = task.inspection_status === 'revision';
+  const canComplete = task.status === 'in_progress' && !isPendingInspection;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -13,12 +16,29 @@ function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUp
               <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase bg-blue-100 text-blue-700">
                 {task.title}
               </span>
+              {isPendingInspection && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase bg-yellow-100 text-yellow-700">
+                  Menunggu Pemeriksaan
+                </span>
+              )}
+              {isRevision && (
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase bg-orange-100 text-orange-700">
+                  Revisi
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-500">
               Dimulai {getTimeAgo(task.started_at)}
             </p>
           </div>
         </div>
+
+        {isRevision && task.inspection_note && (
+          <div className="mt-3 bg-orange-50 border border-orange-100 rounded-lg p-3">
+            <p className="text-xs font-semibold text-orange-700 mb-1">Catatan Supervisor:</p>
+            <p className="text-sm text-orange-600">{task.inspection_note}</p>
+          </div>
+        )}
 
         <div className="mt-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Petugas</p>
@@ -108,27 +128,61 @@ function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUp
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => onComplete(task.schedule_id, photos)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors"
-          >
-            <i className="fa-solid fa-check"></i>
-            {completeButtonText}
-          </button>
-          {showCancel && onCancel && (
-            <button
-              onClick={() => onCancel(task.schedule_id)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
-            >
-              <i className="fa-solid fa-xmark"></i>
-              {cancelButtonText}
-            </button>
+          {isPendingInspection ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onRevertSubmit?.(task.schedule_id)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-orange-600 hover:bg-orange-700 transition-colors"
+              >
+                <i className="fa-solid fa-rotate-left"></i>
+                Batalkan Pengajuan
+              </button>
+              <span className="text-xs text-yellow-600 font-medium">
+                Menunggu pemeriksaan supervisor.
+              </span>
+            </>
+          ) : isRevision ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onComplete(task.schedule_id, photos)}
+                disabled={!canComplete}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i className="fa-solid fa-check"></i>
+                {completeButtonText}
+              </button>
+              <span className="text-xs text-orange-600 font-medium">
+                Perbaiki sesuai catatan supervisor, lalu kirim ulang.
+              </span>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onComplete(task.schedule_id, photos)}
+                disabled={!canComplete}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i className="fa-solid fa-check"></i>
+                {completeButtonText}
+              </button>
+              {showCancel && onCancel && (
+                <button
+                  onClick={() => onCancel(task.schedule_id)}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors"
+                >
+                  <i className="fa-solid fa-xmark"></i>
+                  {cancelButtonText}
+                </button>
+              )}
+              <span className="text-xs text-gray-400">
+                {photos.length < minPhotos
+                  ? `Upload ${minPhotos - photos.length} foto lagi untuk bisa menyelesaikan.`
+                  : 'Siap diselesaikan.'}
+              </span>
+            </>
           )}
-          <span className="text-xs text-gray-400">
-            {photos.length < minPhotos
-              ? `Upload ${minPhotos - photos.length} foto lagi untuk bisa menyelesaikan.`
-              : 'Siap diselesaikan.'}
-          </span>
         </div>
       </div>
     </div>

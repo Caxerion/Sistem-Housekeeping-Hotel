@@ -50,81 +50,67 @@ const getHousekeepingStaff = asyncHandler(async (req, res) => {
 
 const getAllCleaningSchedules = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(`
-    SELECT combined.*,
-           staff_assign.assigned_staff_names,
-           staff_assign.assigned_staff_ids
-    FROM (
-      SELECT
-          rcs.id AS schedule_id,
-          r.id AS room_id,
-          r.room_number AS no_kamar,
-          rt.name AS room_type,
-          rcs.title,
-          rcs.notes,
-          e.full_name AS dijadwalkan_oleh,
-          rcs.scheduled_date,
-          rcs.ended_at,
-          rcs.status,
-          rcs.started_at,
-          rcs.completed_at,
-          rcs.updated_at,
-          r.housekeeping_status,
-          ROW_NUMBER() OVER (
-              PARTITION BY r.id
-              ORDER BY
-                  CASE rcs.status
-                      WHEN 'in_progress' THEN 1
-                      WHEN 'scheduled' THEN 2
-                      WHEN 'completed' THEN 3
-                      WHEN 'canceled' THEN 4
-                      ELSE 5
-                  END,
-                  rcs.scheduled_date DESC
-          ) AS rn
-      FROM room_cleaning_schedule rcs
-      JOIN rooms r ON r.id = rcs.room_id
-      JOIN room_types rt ON rt.id = r.room_type_id
-      JOIN employees e ON e.id = rcs.scheduled_by
-
-      UNION ALL
-
-      SELECT
-          NULL AS schedule_id,
-          r.id AS room_id,
-          r.room_number AS no_kamar,
-          rt.name AS room_type,
-          NULL AS title,
-          NULL AS notes,
-          NULL AS dijadwalkan_oleh,
-          NULL AS scheduled_date,
-          NULL AS ended_at,
-          NULL AS status,
-          NULL AS started_at,
-          NULL AS completed_at,
-          NULL AS updated_at,
-          r.housekeeping_status,
-          1 AS rn
-      FROM rooms r
-      JOIN room_types rt ON rt.id = r.room_type_id
-      WHERE r.id NOT IN (SELECT DISTINCT room_id FROM room_cleaning_schedule)
-    ) combined
+    SELECT
+        r.id AS room_id,
+        r.room_number AS no_kamar,
+        rt.name AS room_type,
+        r.housekeeping_status,
+        rcs.id AS schedule_id,
+        rcs.title,
+        rcs.notes,
+        e.full_name AS dijadwalkan_oleh,
+        rcs.scheduled_date,
+        rcs.ended_at,
+        rcs.status,
+        rcs.started_at,
+        rcs.completed_at,
+        rcs.updated_at,
+        rcs.inspection_status,
+        rcs.inspection_note,
+        rcs.photos,
+        staff_assign.assigned_staff_names,
+        staff_assign.assigned_staff_ids
+    FROM rooms r
+    JOIN room_types rt ON rt.id = r.room_type_id
+    LEFT JOIN room_cleaning_schedule rcs ON rcs.id = (
+        SELECT id FROM room_cleaning_schedule rcs2
+        WHERE rcs2.room_id = r.id
+        ORDER BY rcs2.scheduled_date DESC, rcs2.id DESC
+        LIMIT 1
+    )
+    LEFT JOIN employees e ON e.id = rcs.scheduled_by
     LEFT JOIN (
-      SELECT rcss.schedule_id,
-             GROUP_CONCAT(DISTINCT emp.full_name ORDER BY emp.full_name SEPARATOR ', ') AS assigned_staff_names,
-             GROUP_CONCAT(DISTINCT rcss.employee_id ORDER BY rcss.employee_id) AS assigned_staff_ids
-      FROM room_cleaning_schedule_staff rcss
-      JOIN employees emp ON emp.id = rcss.employee_id
-      GROUP BY rcss.schedule_id
-    ) staff_assign ON staff_assign.schedule_id = combined.schedule_id
-    WHERE rn = 1
-    ORDER BY no_kamar ASC, scheduled_date DESC
+        SELECT rcss.schedule_id,
+               GROUP_CONCAT(DISTINCT emp.full_name ORDER BY emp.full_name SEPARATOR ', ') AS assigned_staff_names,
+               GROUP_CONCAT(DISTINCT rcss.employee_id ORDER BY rcss.employee_id) AS assigned_staff_ids
+        FROM room_cleaning_schedule_staff rcss
+        JOIN employees emp ON emp.id = rcss.employee_id
+        GROUP BY rcss.schedule_id
+    ) staff_assign ON staff_assign.schedule_id = rcs.id
+    ORDER BY r.room_number ASC
   `);
 
   const data = rows.map((r) => {
     const assignedStaffIds = r.assigned_staff_ids ? r.assigned_staff_ids.split(',') : [];
     const assignedStaffNames = r.assigned_staff_names ? r.assigned_staff_names.split(',') : [];
     return {
-      ...r,
+      room_id: r.room_id,
+      no_kamar: r.no_kamar,
+      room_type: r.room_type,
+      housekeeping_status: r.housekeeping_status,
+      schedule_id: r.schedule_id,
+      title: r.title,
+      notes: r.notes,
+      dijadwalkan_oleh: r.dijadwalkan_oleh,
+      scheduled_date: r.scheduled_date,
+      ended_at: r.ended_at,
+      status: r.status,
+      started_at: r.started_at,
+      completed_at: r.completed_at,
+      updated_at: r.updated_at,
+      inspection_status: r.inspection_status,
+      inspection_note: r.inspection_note,
+      photos: r.photos,
       assigned_staff_ids: assignedStaffIds,
       assigned_staff: assignedStaffNames,
     };
@@ -336,7 +322,9 @@ const completeCleaningSchedule = asyncHandler(async (req, res) => {
   const roomId = scheduleRows[0].room_id;
 
   await pool.query(
-    `UPDATE room_cleaning_schedule SET status = 'completed', completed_at = NOW() WHERE id = ?`,
+    `UPDATE room_cleaning_schedule 
+        SET status = 'completed', completed_at = NOW(), inspection_status = 'pending' 
+      WHERE id = ?`,
     [id]
   );
 
@@ -354,7 +342,107 @@ const completeCleaningSchedule = asyncHandler(async (req, res) => {
 
   broadcast('cleaning:completed', { id, room_id: roomId });
 
-  res.json({ success: true, message: 'Pembersihan selesai. Kamar menjadi Clean.' });
+  res.json({ success: true, message: 'Pembersihan selesai. Menunggu pemeriksaan supervisor.' });
+});
+
+const revertCleaningSubmission = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const employeeId = req.user.employee_id;
+
+  const [scheduleRows] = await pool.query(
+    `SELECT room_id, status, inspection_status FROM room_cleaning_schedule WHERE id = ?`,
+    [id]
+  );
+
+  if (scheduleRows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
+  }
+
+  if (scheduleRows[0].inspection_status !== 'pending') {
+    return res.status(409).json({ success: false, message: 'Jadwal ini tidak dalam status menunggu pemeriksaan.' });
+  }
+
+  const [assignedRows] = await pool.query(
+    `SELECT employee_id FROM room_cleaning_schedule_staff WHERE schedule_id = ? AND employee_id = ?`,
+    [id, employeeId]
+  );
+
+  if (assignedRows.length === 0 && req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak: Anda bukan petugas yang ditugaskan pada jadwal ini.' });
+  }
+
+  await pool.query(
+    `UPDATE room_cleaning_schedule 
+       SET status = 'in_progress', inspection_status = NULL, inspection_by = NULL, inspection_note = NULL, inspected_at = NULL 
+     WHERE id = ?`,
+    [id]
+  );
+
+  await pool.query(
+    `UPDATE rooms SET housekeeping_status = 'cleaning' WHERE id = ?`,
+    [scheduleRows[0].room_id]
+  );
+
+  broadcast('cleaning:inspected', { id, room_id: scheduleRows[0].room_id, action: 'reverted' });
+
+  res.json({ success: true, message: 'Pengajuan dibatalkan. Anda dapat melanjutkan pembersihan.' });
+});
+
+const inspectCleaningSchedule = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { action, note } = req.body;
+  const inspectorId = req.user.employee_id;
+  const inspectorRole = req.user.role;
+
+  if (inspectorRole !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Akses ditolak: Hanya admin yang dapat melakukan pemeriksaan.' });
+  }
+
+  if (!['approve', 'reject'].includes(action)) {
+    return res.status(400).json({ success: false, message: 'Aksi tidak valid. Gunakan approve atau reject.' });
+  }
+
+  const [scheduleRows] = await pool.query(
+    `SELECT room_id, status, inspection_status FROM room_cleaning_schedule WHERE id = ?`,
+    [id]
+  );
+
+  if (scheduleRows.length === 0) {
+    return res.status(404).json({ success: false, message: 'Jadwal tidak ditemukan.' });
+  }
+
+  if (scheduleRows[0].inspection_status !== 'pending') {
+    return res.status(409).json({ success: false, message: 'Jadwal ini belum menunggu pemeriksaan.' });
+  }
+
+  if (action === 'approve') {
+    await pool.query(
+      `UPDATE room_cleaning_schedule 
+         SET inspection_status = 'approved', inspection_by = ?, inspection_note = ?, inspected_at = NOW() 
+       WHERE id = ?`,
+      [inspectorId, note || null, id]
+    );
+
+    broadcast('cleaning:inspected', { id, room_id: scheduleRows[0].room_id, action: 'approved' });
+
+    res.json({ success: true, message: 'Pembersihan disetujui.' });
+  } else {
+    await pool.query(
+      `UPDATE room_cleaning_schedule 
+         SET status = 'in_progress', inspection_status = 'revision', inspection_by = ?, inspection_note = ?, inspected_at = NOW() 
+       WHERE id = ?`,
+      [inspectorId, note || null, id]
+    );
+
+    await pool.query(
+      `UPDATE rooms SET housekeeping_status = 'cleaning' WHERE id = ?`,
+      [scheduleRows[0].room_id]
+    );
+
+    broadcast('cleaning:inspected', { id, room_id: scheduleRows[0].room_id, action: 'revision' });
+
+    res.json({ success: true, message: 'Pembersihan direvisi. Staff perlu memperbaiki sesuai catatan.' });
+  }
 });
 
 const cancelCleaningSchedule = asyncHandler(async (req, res) => {
@@ -605,21 +693,23 @@ const getMyCleaningSchedule = asyncHandler(async (req, res) => {
        rcs.started_at,
        rcs.completed_at,
        rcs.photos,
+       rcs.inspection_status,
+       rcs.inspection_note,
        e.full_name AS dijadwalkan_oleh,
        GROUP_CONCAT(DISTINCT rcss2.employee_id ORDER BY rcss2.employee_id) AS assigned_staff_ids,
        GROUP_CONCAT(DISTINCT emp.full_name ORDER BY emp.full_name) AS assigned_staff_names
-     FROM room_cleaning_schedule rcs
-     JOIN rooms r ON r.id = rcs.room_id
-     LEFT JOIN employees e ON e.id = rcs.scheduled_by
-     JOIN room_cleaning_schedule_staff rcss ON rcss.schedule_id = rcs.id
-     LEFT JOIN room_cleaning_schedule_staff rcss2 ON rcss2.schedule_id = rcs.id
-     LEFT JOIN employees emp ON emp.id = rcss2.employee_id
-     WHERE rcss.employee_id = ?
-       AND rcs.status IN ('scheduled', 'in_progress')
-     GROUP BY rcs.id, r.id, r.room_number, rcs.title, rcs.notes, rcs.scheduled_date,
-              rcs.status, rcs.started_at, rcs.completed_at, rcs.photos,
-              e.full_name
-     ORDER BY rcs.scheduled_date DESC`,
+    FROM room_cleaning_schedule rcs
+    JOIN rooms r ON r.id = rcs.room_id
+    LEFT JOIN employees e ON e.id = rcs.scheduled_by
+    JOIN room_cleaning_schedule_staff rcss ON rcss.schedule_id = rcs.id
+    LEFT JOIN room_cleaning_schedule_staff rcss2 ON rcss2.schedule_id = rcs.id
+    LEFT JOIN employees emp ON emp.id = rcss2.employee_id
+    WHERE rcss.employee_id = ?
+      AND (rcs.status IN ('scheduled', 'in_progress') OR (rcs.status = 'completed' AND rcs.inspection_status IN ('pending', 'revision')))
+    GROUP BY rcs.id, r.id, r.room_number, rcs.title, rcs.notes, rcs.scheduled_date,
+             rcs.status, rcs.started_at, rcs.completed_at, rcs.photos,
+             rcs.inspection_status, rcs.inspection_note, e.full_name
+    ORDER BY rcs.scheduled_date DESC`,
     [employeeId]
   );
 
@@ -644,6 +734,8 @@ module.exports = {
   updateCleaningSchedule,
   startCleaningSchedule,
   completeCleaningSchedule,
+  inspectCleaningSchedule,
+  revertCleaningSubmission,
   cancelCleaningSchedule,
   assignStaffToCleaningSchedule,
   uploadCleaningPhotos,

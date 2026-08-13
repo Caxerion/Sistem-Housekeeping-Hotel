@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { StatusBadge, HousekeepingBadge } from '../components/maintenance/MaintenanceBadges';
+import Swal from 'sweetalert2';
 
 function buildPageTokens(current, total) {
   const delta = 1;
@@ -24,6 +25,10 @@ const StatusPembersihan = () => {
   const [editingEllipsis, setEditingEllipsis] = useState(null);
   const [pageInput, setPageInput] = useState('');
   const [now, setNow] = useState(0);
+  const [reviewModal, setReviewModal] = useState({ open: false, schedule: null });
+  const [reviewAction, setReviewAction] = useState(null);
+  const [reviewNote, setReviewNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const itemsPerPage = 10;
 
   const fetchSchedules = useCallback(async () => {
@@ -38,12 +43,104 @@ const StatusPembersihan = () => {
     }
   }, []);
 
+  const openReviewModal = (schedule) => {
+    if (!schedule || !schedule.schedule_id) {
+      Swal.fire({ icon: 'warning', title: 'Data tidak valid', text: 'Jadwal tidak valid untuk direview.' });
+      return;
+    }
+    setReviewModal({ open: true, schedule });
+    setReviewAction(null);
+    setReviewNote('');
+  };
+
+  const parsePhotos = (photos) => {
+    if (Array.isArray(photos)) return photos;
+    if (typeof photos === 'string') {
+      try {
+        const parsed = JSON.parse(photos);
+        return Array.isArray(parsed) ? parsed : [photos];
+      } catch {
+        return [photos];
+      }
+    }
+    return [];
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!reviewAction) {
+      Swal.fire({ icon: 'warning', title: 'Pilih aksi', text: 'Silakan pilih Approve atau Disapprove.' });
+      return;
+    }
+
+    const scheduleId = reviewModal.schedule?.schedule_id;
+    if (!scheduleId) {
+      Swal.fire({ icon: 'error', title: 'Gagal', text: 'Jadwal tidak valid. ID jadwal tidak ditemukan.' });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api.put(`/cleaning-schedule/${scheduleId}/inspect`, {
+        action: reviewAction,
+        note: reviewNote,
+      });
+
+      Swal.fire({
+        icon: reviewAction === 'approve' ? 'success' : 'info',
+        title: reviewAction === 'approve' ? 'Disetujui' : 'Revisi',
+        text: reviewAction === 'approve' ? 'Pembersihan disetujui oleh supervisor.' : 'Pembersihan masuk revisi. Staff perlu memperbaiki sesuai catatan.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setReviewModal({ open: false, schedule: null });
+      setReviewAction(null);
+      setReviewNote('');
+      fetchSchedules();
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal melakukan review.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSchedules();
   }, [fetchSchedules]);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const eventSource = new EventSource(`http://localhost:3000/api/events?token=${token}`);
+
+    const refresh = () => {
+      fetchSchedules();
+    };
+
+    eventSource.addEventListener('connected', () => {
+      console.log('SSE connected');
+    });
+    eventSource.addEventListener('schedule:created', refresh);
+    eventSource.addEventListener('schedule:started', refresh);
+    eventSource.addEventListener('schedule:completed', refresh);
+    eventSource.addEventListener('schedule:canceled', refresh);
+    eventSource.addEventListener('cleaning:created', refresh);
+    eventSource.addEventListener('cleaning:started', refresh);
+    eventSource.addEventListener('cleaning:completed', refresh);
+    eventSource.addEventListener('cleaning:inspected', refresh);
+    eventSource.addEventListener('cleaning:canceled', refresh);
+    eventSource.addEventListener('schedule:staffAssigned', refresh);
+    eventSource.addEventListener('cleaning:staffAssigned', refresh);
+
+    return () => {
+      eventSource.close();
+    };
+  }, [fetchSchedules]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
@@ -168,12 +265,14 @@ const StatusPembersihan = () => {
                   <th className="text-left py-3 px-4 font-medium">Tanggal</th>
                   <th className="text-left py-3 px-4 font-medium">Petugas</th>
                   <th className="text-left py-3 px-4 font-medium">Status</th>
+                  <th className="text-left py-3 px-4 font-medium">Pemeriksaan</th>
+                  <th className="text-left py-3 px-4 font-medium">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedSchedules.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="text-center py-4" style={{ color: '#9ca3af' }}>
+                    <td colSpan="8" className="text-center py-4" style={{ color: '#9ca3af' }}>
                       {search.trim() ? 'Tidak ada jadwal yang cocok.' : 'Belum ada jadwal pembersihan.'}
                     </td>
                   </tr>
@@ -225,6 +324,37 @@ const StatusPembersihan = () => {
                           <StatusBadge status={getDisplayStatus(schedule)} />
                         ) : (
                           <HousekeepingBadge status={getDisplayStatus(schedule)} />
+                        )}
+                      </td>
+                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb', color: '#6b7280' }}>
+                        {schedule.inspection_status === 'pending' && (
+                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-yellow-100 text-yellow-700">
+                            Menunggu Pemeriksaan
+                          </span>
+                        )}
+                        {schedule.inspection_status === 'approved' && (
+                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+                            Disetujui
+                          </span>
+                        )}
+                        {schedule.inspection_status === 'revision' && (
+                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-orange-100 text-orange-700">
+                            Revisi
+                          </span>
+                        )}
+                        {!schedule.inspection_status && <span style={{ color: '#9ca3af' }}>-</span>}
+                      </td>
+                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                        {schedule.inspection_status === 'pending' ? (
+                          <button
+                            type="button"
+                            onClick={() => openReviewModal(schedule)}
+                            className="px-3 py-1.5 rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                          >
+                            Review
+                          </button>
+                        ) : (
+                          <span style={{ color: '#9ca3af' }}>-</span>
                         )}
                       </td>
                     </tr>
@@ -315,6 +445,101 @@ const StatusPembersihan = () => {
           </div>
         )}
       </div>
+
+      {reviewModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setReviewModal({ open: false, schedule: null })} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-800">Review Pembersihan</h2>
+              <button onClick={() => setReviewModal({ open: false, schedule: null })} className="text-gray-400 hover:text-gray-600 p-1" aria-label="Tutup">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Kamar</p>
+                <p className="text-base font-semibold text-gray-800">#{reviewModal.schedule?.no_kamar}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Judul</p>
+                <p className="text-base text-gray-800">{reviewModal.schedule?.title}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Foto Dokumentasi Staff</p>
+                {(() => {
+                  const photos = parsePhotos(reviewModal.schedule?.photos);
+                  if (photos.length === 0) return <p className="text-xs text-gray-400">Tidak ada foto.</p>;
+                  return (
+                    <div className="flex flex-wrap gap-2">
+                      {photos.map((photo, idx) => (
+                        <img
+                          key={idx}
+                          src={`http://localhost:3000${photo}`}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Catatan Review (Opsional)</p>
+                <textarea
+                  value={reviewNote}
+                  onChange={(e) => setReviewNote(e.target.value)}
+                  rows={3}
+                  placeholder="Berikan feedback untuk staff..."
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 resize-none"
+                  style={{ color: '#1f2937' }}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewAction('approve')}
+                  className={`flex-1 rounded-lg px-4 py-2.5 font-semibold text-white transition-colors ${
+                    reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-green-600/70 hover:bg-green-600'
+                  }`}
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReviewAction('reject')}
+                  className={`flex-1 rounded-lg px-4 py-2.5 font-semibold text-white transition-colors ${
+                    reviewAction === 'reject' ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600/70 hover:bg-red-600'
+                  }`}
+                >
+                  Disapprove
+                </button>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewModal({ open: false, schedule: null })}
+                  className="rounded-lg px-4 py-2.5 font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReviewSubmit}
+                  disabled={submitting || !reviewAction}
+                  className="rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:opacity-70 transition-colors"
+                >
+                  {submitting ? 'Menyimpan...' : 'Kirim Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
