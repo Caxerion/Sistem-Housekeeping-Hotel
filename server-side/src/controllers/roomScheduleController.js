@@ -463,7 +463,24 @@ const uploadPhotos = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Tidak ada foto yang diupload.' });
   }
 
-  const existingPhotos = scheduleRows[0].photos ? JSON.parse(scheduleRows[0].photos) : [];
+  let existingPhotos = [];
+  const rawPhotos = scheduleRows[0].photos;
+  if (rawPhotos) {
+    if (Array.isArray(rawPhotos)) {
+      existingPhotos = rawPhotos;
+    } else if (typeof rawPhotos === 'string') {
+      const trimmed = rawPhotos.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          existingPhotos = JSON.parse(trimmed);
+        } catch {
+          existingPhotos = [trimmed];
+        }
+      } else {
+        existingPhotos = [trimmed];
+      }
+    }
+  }
   const newPhotos = req.files.map((file) => `/uploads/maintenance/${file.filename}`);
   const updatedPhotos = [...existingPhotos, ...newPhotos];
 

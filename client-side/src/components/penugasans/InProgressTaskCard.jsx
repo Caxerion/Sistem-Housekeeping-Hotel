@@ -1,4 +1,4 @@
-function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUploadPhotos, onComplete, onCancel, parsePhotos, getTimeAgo, minPhotos, showCancel = false, completeButtonText = 'Selesaikan', cancelButtonText = 'Batalkan Pembersihan' }) {
+function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUploadPhotos, onDeletePhoto, onComplete, onCancel, parsePhotos, getTimeAgo, minPhotos, showCancel = false, completeButtonText = 'Selesaikan', cancelButtonText = 'Batalkan Pembersihan' }) {
   const photos = parsePhotos(task.photos);
   const staffNames = Array.isArray(task.assigned_staff) ? task.assigned_staff : [];
   const staffIds = Array.isArray(task.assigned_staff_ids) ? task.assigned_staff_ids : [];
@@ -64,6 +64,13 @@ function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUp
                     alt={`Foto ${idx + 1}`}
                     className="w-full h-full object-cover"
                   />
+                  <button
+                    onClick={() => onDeletePhoto(task.schedule_id, photo)}
+                    className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white text-xs hover:bg-red-600 transition-colors"
+                    title="Hapus foto"
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
                 </div>
               ))}
             </div>
@@ -71,13 +78,13 @@ function InProgressTaskCard({ task, myEmployeeId, uploading, fileInputRefs, onUp
 
           <div className="flex items-center gap-3">
             <input
-                              ref={(el) => {
-                                if (!fileInputRefs.current[task.schedule_id]) {
-                                  // eslint-disable-next-line react-hooks/immutability
-                                  fileInputRefs.current[task.schedule_id] = {};
-                                }
-                                fileInputRefs.current[task.schedule_id].upload = el;
-                              }}
+                               ref={(el) => {
+                                 if (!fileInputRefs.current[task.schedule_id]) {
+                                   // eslint-disable-next-line react-hooks/immutability
+                                   fileInputRefs.current[task.schedule_id] = {};
+                                 }
+                                 fileInputRefs.current[task.schedule_id].upload = el;
+                               }}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
