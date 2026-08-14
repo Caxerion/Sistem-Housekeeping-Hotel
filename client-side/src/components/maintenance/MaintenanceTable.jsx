@@ -75,7 +75,7 @@ function MaintenanceTable({
         <p className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280' }}>Memuat data...</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm responsive-table">
             <thead>
               <tr className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280', fontSize: '0.85rem' }}>
                 <th className="text-left py-3 px-4 font-medium">No. Kamar</th>
@@ -97,12 +97,14 @@ function MaintenanceTable({
                 paginatedSchedules.map((sched, idx) => (
                   <tr key={sched.schedule_id ?? `empty-${sched.room_id}-${idx}`} className={isDark ? 'border-gray-700' : ''} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                     <td
+                      data-label="No. Kamar"
                       className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`}
                       style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}
                     >
                       {sched.no_kamar}
                     </td>
                     <td
+                      data-label="Judul"
                       className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
                       style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : (sched.title ? '#1f2937' : '#9ca3af') }}
                     >
@@ -112,21 +114,23 @@ function MaintenanceTable({
                       )}
                     </td>
                      <td
+                       data-label="Tanggal Mulai"
                        className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
                        style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}
                      >
                        {formatDate(sched.scheduled_date) || '-'}
                      </td>
                      <td
+                       data-label="Tanggal Selesai"
                        className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
                        style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}
                      >
                        {formatDate(sched.ended_at) || '-'}
                      </td>
-                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                    <td data-label="Status" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <StatusBadge status={sched.status} />
                     </td>
-                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                    <td data-label="Aksi" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <div className="flex gap-2">
                         {sched.status === 'scheduled' && (
                           <>

@@ -250,7 +250,7 @@ function InventoryMasterData() {
           </div>
 
           <div className="bg-white rounded-2xl shadow overflow-hidden">
-            <table className="w-full text-sm text-left text-gray-600">
+            <table className="w-full text-sm text-left text-gray-600 responsive-table">
               <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                 <tr>
                   <th className="px-6 py-3">ID</th>
@@ -269,10 +269,10 @@ function InventoryMasterData() {
                 ) : (
                   categories.map((cat) => (
                     <tr key={cat.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-3">{cat.id}</td>
-                      <td className="px-6 py-3 font-medium text-gray-800">{cat.name}</td>
-                      <td className="px-6 py-3 text-gray-500">{cat.description || '-'}</td>
-                      <td className="px-6 py-3 text-right">
+                      <td data-label="ID" className="px-6 py-3">{cat.id}</td>
+                      <td data-label="Nama" className="px-6 py-3 font-medium text-gray-800">{cat.name}</td>
+                      <td data-label="Deskripsi" className="px-6 py-3 text-gray-500">{cat.description || '-'}</td>
+                      <td data-label="Aksi" className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEditCategory(cat)}
@@ -389,7 +389,7 @@ function InventoryMasterData() {
           </div>
 
           <div className="bg-white rounded-2xl shadow overflow-hidden">
-            <table className="w-full text-sm text-left text-gray-600">
+            <table className="w-full text-sm text-left text-gray-600 responsive-table">
               <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                 <tr>
                   <th className="px-6 py-3">ID</th>
@@ -411,13 +411,13 @@ function InventoryMasterData() {
                 ) : (
                   items.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-3">{item.id}</td>
-                      <td className="px-6 py-3 font-medium text-gray-800">{item.name}</td>
-                      <td className="px-6 py-3">{item.category}</td>
-                      <td className="px-6 py-3">{item.unit}</td>
-                      <td className="px-6 py-3">{item.current_stock}</td>
-                      <td className="px-6 py-3">{item.minimum_stock}</td>
-                      <td className="px-6 py-3 text-right">
+                      <td data-label="ID" className="px-6 py-3">{item.id}</td>
+                      <td data-label="Nama" className="px-6 py-3 font-medium text-gray-800">{item.name}</td>
+                      <td data-label="Kategori" className="px-6 py-3">{item.category}</td>
+                      <td data-label="Unit" className="px-6 py-3">{item.unit}</td>
+                      <td data-label="Stok" className="px-6 py-3">{item.current_stock}</td>
+                      <td data-label="Min. Stok" className="px-6 py-3">{item.minimum_stock}</td>
+                      <td data-label="Aksi" className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEditItem(item)}
