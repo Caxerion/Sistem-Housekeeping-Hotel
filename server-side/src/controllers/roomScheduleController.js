@@ -224,6 +224,7 @@ const updateSchedule = asyncHandler(async (req, res) => {
 // PUT /api/room-schedule/:id/start
 const startSchedule = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const employeeId = req.user.employee_id;
   const [scheduleRows] = await pool.query(
     `SELECT room_id, status FROM room_maintenance_schedule WHERE id = ?`,
     [id]
@@ -237,8 +238,8 @@ const startSchedule = asyncHandler(async (req, res) => {
   }
 
   await pool.query(
-    `UPDATE room_maintenance_schedule SET status = 'in_progress', started_at = NOW() WHERE id = ?`,
-    [id]
+    `UPDATE room_maintenance_schedule SET status = 'in_progress', started_at = NOW(), performed_by = ? WHERE id = ?`,
+    [employeeId, id]
   );
 
   await pool.query(
@@ -254,8 +255,10 @@ const startSchedule = asyncHandler(async (req, res) => {
 // PUT /api/room-schedule/:id/complete
 const completeSchedule = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const employeeId = req.user.employee_id;
+  const userRole = req.user.role;
   const [scheduleRows] = await pool.query(
-    `SELECT room_id FROM room_maintenance_schedule WHERE id = ? AND status = 'in_progress'`,
+    `SELECT room_id, status, performed_by FROM room_maintenance_schedule WHERE id = ? AND status = 'in_progress'`,
     [id]
   );
 
@@ -263,6 +266,13 @@ const completeSchedule = asyncHandler(async (req, res) => {
     return res.status(409).json({
       success: false,
       message: 'Jadwal tidak ditemukan atau belum berstatus in_progress.',
+    });
+  }
+
+  if (userRole !== 'admin' && scheduleRows[0].performed_by !== employeeId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Hanya staff yang memulai maintenance atau admin yang dapat menyelesaikan maintenance ini.',
     });
   }
 

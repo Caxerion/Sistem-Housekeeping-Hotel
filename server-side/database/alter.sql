@@ -19,6 +19,10 @@ ENUM(
 DEFAULT 'clean'
 AFTER occupancy_status;
 
+ALTER TABLE room_maintenance_schedule
+ADD COLUMN performed_by INT NULL AFTER started_at,
+ADD FOREIGN KEY (performed_by) REFERENCES employees(id) ON DELETE RESTRICT;
+
 CREATE TABLE IF NOT EXISTS room_cleaning_schedule (
     id INT AUTO_INCREMENT PRIMARY KEY,
     room_id INT NOT NULL,
