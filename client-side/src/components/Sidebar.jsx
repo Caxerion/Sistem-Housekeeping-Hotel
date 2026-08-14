@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -22,11 +22,13 @@ const menuItems = [
 ];
 
 function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark } = useTheme();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [collapsedPopover, setCollapsedPopover] = useState({ open: false, label: null, pos: null });
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const popoverRef = useRef(null);
+  const profileMenuRef = useRef(null);
 
   const toggleDropdown = (label) => {
     setOpenDropdown(openDropdown === label ? null : label);
@@ -50,12 +52,15 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
         setCollapsedPopover({ open: false, label: null, pos: null });
       }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setIsProfileMenuOpen(false);
+      }
     };
-    if (collapsedPopover.open) {
+    if (collapsedPopover.open || isProfileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [collapsedPopover.open]);
+  }, [collapsedPopover.open, isProfileMenuOpen]);
 
   const filteredMenuItems = menuItems.map((item) => {
     if (!item.children) return item;
@@ -243,18 +248,52 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
 
       {/* Profile */}
       <div className={`mt-auto border-t ${isDark ? 'border-blue-800' : 'border-white/10'} ${collapsed ? 'p-2' : 'p-4'}`}>
-        <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium shrink-0 ${isDark ? 'bg-blue-800 text-blue-100' : 'bg-white/20 text-white'}`}>
-            {user?.employee_name?.[0]?.toUpperCase() || 'U'}
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className={`text-sm font-medium truncate ${isDark ? 'text-blue-50' : 'text-white'}`}>
-                {user?.employee_name || 'User'}
-              </p>
-              <p className={`text-xs truncate ${isDark ? 'text-blue-200' : 'text-white/70'}`}>
-                {user?.username || 'user@example.com'}
-              </p>
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            onClick={() => !collapsed && setIsProfileMenuOpen((prev) => !prev)}
+            className={`flex items-center gap-3 w-full rounded-md transition-colors ${collapsed ? 'justify-center' : ''} ${isDark ? 'hover:bg-blue-800/50' : 'hover:bg-white/10'}`}
+          >
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium shrink-0 ${isDark ? 'bg-blue-800 text-blue-100' : 'bg-white/20 text-white'}`}>
+              {user?.employee_name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col text-left min-w-0">
+                <p className={`text-sm font-medium truncate ${isDark ? 'text-blue-50' : 'text-white'}`}>
+                  {user?.employee_name || 'User'}
+                </p>
+                <p className={`text-xs truncate ${isDark ? 'text-blue-200' : 'text-white/70'}`}>
+                  {user?.username || 'user@example.com'}
+                </p>
+                <p className={`text-xs truncate ${isDark ? 'text-blue-300' : 'text-white/60'}`}>
+                  {user?.employee_position || '-'}
+                </p>
+              </div>
+            )}
+          </button>
+
+          {/* Dropdown */}
+          {!collapsed && isProfileMenuOpen && (
+            <div
+              className={`absolute left-full ml-2 top-1/2 -translate-y-[55%] w-48 rounded-lg shadow-xl border py-1 origin-left transition-all duration-200 ease-out ${
+                isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+              }`}
+            >
+              <Link
+                to="/profile"
+                onClick={() => setIsProfileMenuOpen(false)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'}`}
+              >
+                <i className="fa-solid fa-user w-4 text-center"></i> Lihat Profil
+              </Link>
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  logout();
+                }}
+                className={`flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm ${isDark ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-red-50'}`}
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i> Log Out
+              </button>
             </div>
           )}
         </div>

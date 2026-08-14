@@ -92,14 +92,35 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                 </div>
               </button>
 
-              {/* Dropdown: View Profile & Log Out */}
+              {/* Dropdown: User Info + View Profile & Log Out */}
               <div
-                className={`absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-xl border border-gray-100 py-1 origin-top-right transition-all duration-200 ease-out ${
+                className={`absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-100 py-1 origin-top-right transition-all duration-200 ease-out ${
                   isUserMenuOpen
                     ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 scale-95 -translate-y-1 pointer-events-none'
                 }`}
               >
+                {/* User Info */}
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-medium shrink-0">
+                      {user?.employee_name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div className="flex flex-col text-left min-w-0">
+                      <span className="text-sm font-semibold text-gray-800 truncate">
+                        {user?.employee_name || 'User'}
+                      </span>
+                      <span className="text-xs text-gray-500 truncate">
+                        {user?.email || '-'}
+                      </span>
+                      <span className="text-xs text-gray-400 truncate">
+                        {user?.employee_position || '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
                 <Link
                   to="/profile"
                   onClick={() => setIsUserMenuOpen(false)}
