@@ -217,8 +217,105 @@ const logout = async (req, res) => {
     }
 };
 
+const updateProfile = async (req, res) => {
+    const user = req.user;
+    const body = req.body || {};
+    const full_name = body.full_name?.trim();
+    const email = body.email?.trim();
+    const phone = body.phone?.trim();
+    const password = body.password?.trim();
+
+    if (!full_name && !email && !phone && !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Tidak ada data yang diubah"
+        });
+    }
+
+    try {
+        const [empRows] = await pool.query(
+            "SELECT e.id AS employee_id FROM employees e JOIN users u ON u.employee_id = e.id WHERE u.id = ?",
+            [user.user_id]
+        );
+
+        if (empRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Data karyawan tidak ditemukan"
+            });
+        }
+
+        const employeeId = empRows[0].employee_id;
+        const updateFields = [];
+        const updateValues = [];
+
+        if (full_name) {
+            updateFields.push("full_name = ?");
+            updateValues.push(full_name);
+        }
+        if (email) {
+            updateFields.push("email = ?");
+            updateValues.push(email);
+        }
+        if (phone) {
+            updateFields.push("phone = ?");
+            updateValues.push(phone);
+        }
+
+        if (updateFields.length > 0) {
+            updateValues.push(employeeId);
+            await pool.query(
+                `UPDATE employees SET ${updateFields.join(", ")} WHERE id = ?`,
+                updateValues
+            );
+        }
+
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await pool.query(
+                "UPDATE users SET password = ? WHERE id = ?",
+                [hashedPassword, user.user_id]
+            );
+        }
+
+        const [updatedUserRows] = await pool.query(
+            "SELECT e.id AS employee_id, e.full_name, e.phone, e.email, u.username FROM employees e JOIN users u ON u.employee_id = e.id WHERE u.id = ?",
+            [user.user_id]
+        );
+
+        const updatedUser = updatedUserRows[0] || {};
+
+        return res.status(200).json({
+            success: true,
+            message: "Profil berhasil diperbarui",
+            data: {
+                user: {
+                    user_id: user.user_id,
+                    username: updatedUser.username || user.username,
+                    email: updatedUser.email || user.email,
+                    employee_id: updatedUser.employee_id || user.employee_id,
+                    employee_name: updatedUser.full_name || user.employee_name,
+                    employee_position: user.employee_position,
+                    phone: updatedUser.phone || user.phone,
+                    current_role: user.current_role,
+                    access_rights: user.access_rights
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('[UPDATE PROFILE ERROR]:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan pada server internal.",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     register,
     login,
-    logout
+    logout,
+    updateProfile
 };

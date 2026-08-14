@@ -17,6 +17,7 @@ import Staff from './pages/Staff';
 import EndAttendance from './pages/Endattendance';
 import AbsensiLogs from './pages/AbsensiLogs';
 import IzinForm from './pages/IzinForm';
+import Profile from './pages/Profile';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 function MaintenancePage() {
@@ -98,6 +99,7 @@ function AppContent() {
                 <Route path="/attendance/end/:id" element={routeLayout('Akhiri Absensi', <EndAttendance/>)}/>
                 <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
                 <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
+                <Route path="/profile" element={routeLayout('Profile', <Profile/>)}/>
             </Routes>
     )
 }
