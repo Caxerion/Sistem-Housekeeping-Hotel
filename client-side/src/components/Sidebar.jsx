@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const menuItems = [
   { label: 'Dashboard', to: '/dashboard', icon: 'fa-solid fa-chart-area' },
@@ -22,6 +23,7 @@ const menuItems = [
 
 function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [openDropdown, setOpenDropdown] = useState(null);
   const [collapsedPopover, setCollapsedPopover] = useState({ open: false, label: null, pos: null });
   const popoverRef = useRef(null);
@@ -72,7 +74,7 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
         <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={onMobileClose} />
       )}
 
-      <aside className={`fixed left-0 top-18 bottom-0 bg-blue-600 rounded-r-xl flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`fixed left-0 top-18 bottom-0 rounded-r-xl flex flex-col z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-56'} ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} ${isDark ? 'bg-blue-900' : 'bg-blue-600'}`}>
       {/* Toggle button */}
       <button
          onClick={() => {
@@ -126,9 +128,9 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
                       toggleDropdown(item.label);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-6 py-3.5 text-sm font-medium border-l-4 border-transparent text-white/90 hover:bg-white/5 hover:text-white transition-colors ${
-                    collapsed ? 'justify-center px-0' : ''
-                  }`}
+                   className={`w-full flex items-center gap-3 px-6 py-3.5 text-sm font-medium border-l-4 border-transparent transition-colors ${
+                     collapsed ? 'justify-center px-0' : ''
+                   } ${isDark ? 'text-blue-100 hover:bg-blue-800 hover:text-white' : 'text-white/90 hover:bg-white/5 hover:text-white'}`}
                   title={collapsed ? item.label : undefined}
                 >
                   <span className="text-lg leading-none">
@@ -155,7 +157,9 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
                 {collapsed && collapsedPopover.open && collapsedPopover.label === item.label && (
                   <div
                     ref={popoverRef}
-                    className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-100 py-1 min-w-[160px] popover-slide-in"
+                    className={`fixed z-50 rounded-lg shadow-xl border py-1 min-w-[160px] popover-slide-in ${
+                      isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+                    }`}
                     style={{
                       top: collapsedPopover.pos.top,
                       left: collapsedPopover.pos.left,
@@ -169,8 +173,8 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
                         className={({ isActive }) =>
                           `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
                             isActive
-                              ? 'bg-blue-50 text-blue-600'
-                              : 'text-gray-700 hover:bg-gray-50'
+                              ? isDark ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'
+                              : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
                           }`
                         }
                       >
@@ -188,27 +192,27 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
                       isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                     }`}
                   >
-                    <div className="bg-blue-700/30">
-                      {item.children.map((child) => (
-                        <NavLink
-                          key={child.to}
-                          to={child.to}
-                          className={({ isActive }) =>
-                            `flex items-center gap-3 py-2.5 px-6 text-sm font-medium border-l-4 transition-colors ${
-                              isActive
-                                ? 'bg-white/10 border-white text-white font-semibold'
-                                : 'border-transparent text-white/80 hover:bg-white/5 hover:text-white'
-                            }`
-                          }
-                          style={{ paddingLeft: '3.5rem' }}
-                        >
-                          <span className="text-base leading-none">
-                            <i className={child.icon}></i>
-                          </span>
-                          <span>{child.label}</span>
-                        </NavLink>
-                      ))}
-                    </div>
+                     <div className={isDark ? 'bg-blue-800/50' : 'bg-blue-700/30'}>
+                       {item.children.map((child) => (
+                         <NavLink
+                           key={child.to}
+                           to={child.to}
+                           className={({ isActive }) =>
+                             `flex items-center gap-3 py-2.5 px-6 text-sm font-medium border-l-4 transition-colors ${
+                               isActive
+                                 ? isDark ? 'bg-blue-700 border-blue-400 text-white font-semibold' : 'bg-white/10 border-white text-white font-semibold'
+                                 : isDark ? 'border-transparent text-blue-100 hover:bg-blue-700 hover:text-white' : 'border-transparent text-white/80 hover:bg-white/5 hover:text-white'
+                             }`
+                           }
+                           style={{ paddingLeft: '3.5rem' }}
+                         >
+                           <span className="text-base leading-none">
+                             <i className={child.icon}></i>
+                           </span>
+                           <span>{child.label}</span>
+                         </NavLink>
+                       ))}
+                     </div>
                   </div>
                 )}
               </div>
@@ -222,8 +226,8 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-6 py-3.5 text-sm font-medium border-l-4 transition-colors ${
                   isActive
-                    ? 'bg-white/10 border-white text-white font-semibold'
-                    : 'border-transparent text-white/90 hover:bg-white/5 hover:text-white'
+                    ? isDark ? 'bg-blue-800 border-blue-400 text-white font-semibold' : 'bg-white/10 border-white text-white font-semibold'
+                    : isDark ? 'border-transparent text-blue-100 hover:bg-blue-800 hover:text-white' : 'border-transparent text-white/90 hover:bg-white/5 hover:text-white'
                 } ${collapsed ? 'justify-center px-0' : ''}`
               }
               title={collapsed ? item.label : undefined}
@@ -238,17 +242,17 @@ function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
       </nav>
 
       {/* Profile */}
-      <div className={`mt-auto border-t border-white/10 ${collapsed ? 'p-2' : 'p-4'}`}>
+      <div className={`mt-auto border-t ${isDark ? 'border-blue-800' : 'border-white/10'} ${collapsed ? 'p-2' : 'p-4'}`}>
         <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-medium shrink-0">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium shrink-0 ${isDark ? 'bg-blue-800 text-blue-100' : 'bg-white/20 text-white'}`}>
             {user?.employee_name?.[0]?.toUpperCase() || 'U'}
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className={`text-sm font-medium truncate ${isDark ? 'text-blue-50' : 'text-white'}`}>
                 {user?.employee_name || 'User'}
               </p>
-              <p className="text-xs text-white/70 truncate">
+              <p className={`text-xs truncate ${isDark ? 'text-blue-200' : 'text-white/70'}`}>
                 {user?.username || 'user@example.com'}
               </p>
             </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const Gear = ({ className = '' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -14,6 +15,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
   const profileRef = useRef(null);
   const userMenuRef = useRef(null);
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const menuItems = [
     { label: 'Dashboard', to: '/dashboard', icon: 'fa-solid fa-chart-area' },
@@ -57,7 +59,7 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-blue-600 shadow-md">
+    <nav className={`fixed top-0 left-0 right-0 z-50 shadow-md ${isDark ? 'bg-blue-900' : 'bg-blue-600'}`}>
       <div className="w-full pl-2 pr-4 sm:pl-10 sm:pr-6">
         <div className="h-18 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
@@ -129,19 +131,21 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
 
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-100 py-1">
-                  <Link
-                    to=""
-                    onClick={() => setIsProfileOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                  <button
+                    onClick={() => {
+                      toggleTheme();
+                      setIsProfileOpen(false);
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    <i className="fa-solid fa-moon"></i> Dark Mode
-                  </Link>
+                    <i className={`fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`}></i> {isDark ? 'Light Mode' : 'Dark Mode'}
+                  </button>
                   <button
                     onClick={() => {
                       setIsProfileOpen(false);
                       logout();
                     }}
-                    className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2 w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                   >
                     <i className="fa-solid fa-arrow-right-from-bracket"></i> Log Out
                   </button>
@@ -171,15 +175,15 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
 
       {/* Mobile offcanvas-style panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 bg-white z-50 shadow-2xl transform transition-transform duration-300 md:hidden flex flex-col ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        className={`fixed top-0 right-0 h-full w-72 z-50 shadow-2xl transform transition-transform duration-300 md:hidden flex flex-col ${
+          isDark ? 'bg-gray-800' : 'bg-white'
+        } ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-         <div className="flex items-center justify-between px-5 h-20 border-b border-gray-100 shrink-0">
-          <h5 className="font-semibold text-gray-800">Grand Nusantara Hotel</h5>
+         <div className={`flex items-center justify-between px-5 h-20 border-b shrink-0 ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+          <h5 className={`font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Grand Nusantara Hotel</h5>
           <button
             onClick={closeMobileMenu}
-            className="text-gray-500 p-1"
+            className={`p-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
             aria-label="Tutup menu"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -196,12 +200,14 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                   <div key={item.label}>
                     <button
                       onClick={() => toggleMobileDropdown(item.label)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                        isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
-                      <i className={`${item.icon} w-4 text-center text-gray-500`}></i>
+                      <i className={`${item.icon} w-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}></i>
                       <span className="flex-1 text-left">{item.label}</span>
                       <svg
-                        className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''} ${isDark ? 'text-gray-400' : 'text-gray-400'}`}
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -225,8 +231,8 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                             className={({ isActive }) =>
                               `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                                 isActive
-                                  ? 'bg-blue-50 text-blue-600'
-                                  : 'text-gray-600 hover:bg-gray-50'
+                                  ? isDark ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'
+                                  : isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-50'
                               }`
                             }
                           >
@@ -248,12 +254,12 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? isDark ? 'bg-gray-700 text-blue-400' : 'bg-blue-50 text-blue-600'
+                        : isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50'
                     }`
                   }
                 >
-                  <i className={`${item.icon} w-4 text-center text-gray-500`}></i>
+                  <i className={`${item.icon} w-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}></i>
                   <span>{item.label}</span>
                 </NavLink>
               );
@@ -261,12 +267,14 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
           </nav>
 
           {/* Mobile Profile Section */}
-          <div className="mt-2 px-5 pt-4 pb-4 border-t border-gray-100">
+          <div className={`mt-2 px-5 pt-4 pb-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
             <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-sm font-medium">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                isDark ? 'bg-gray-700 text-gray-300' : 'bg-blue-100 text-blue-700'
+              }`}>
                 {user?.employee_name?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {user?.employee_name || 'User'}
               </span>
             </div>
@@ -275,7 +283,9 @@ function Navbar({ pageTitle = 'Housekeeping' }) {
                 closeMobileMenu();
                 logout();
               }}
-              className="mt-2 w-full px-3 py-2.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 text-left"
+              className={`mt-2 w-full px-3 py-2.5 rounded-md text-sm font-medium text-left ${
+                isDark ? 'text-red-400 hover:bg-gray-700' : 'text-red-600 hover:bg-red-50'
+              }`}
             >
               <i className="fa-solid fa-arrow-right-from-bracket"></i> Log Out
             </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import Swal from 'sweetalert2';
 import MaintenanceFormModal from '../components/maintenance/MaintenanceFormModal';
@@ -19,6 +20,7 @@ const initialForm = {
 
 function PembagianMaintenance() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const [rooms, setRooms] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [schedules, setSchedules] = useState([]);
@@ -326,8 +328,8 @@ function PembagianMaintenance() {
     <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-4">
       <div className="p-6 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Pembagian Maintenance</h1>
-          <p className="text-gray-500 mt-2">Jadwalkan dan kelola maintenance kamar.</p>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Pembagian Maintenance</h1>
+          <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Jadwalkan dan kelola maintenance kamar.</p>
         </div>
 
         {user && (

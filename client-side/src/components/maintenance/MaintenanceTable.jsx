@@ -1,4 +1,5 @@
 import { StatusBadge } from './MaintenanceBadges';
+import { useTheme } from '../../context/ThemeContext';
 
 function formatDate(dateStr) {
   if (!dateStr) return null;
@@ -37,46 +38,46 @@ function MaintenanceTable({
   setPageInput,
   handlePageInputKeyDown,
   submitPageInput,
-  user,
   handleStart,
   handleComplete,
   handleCancel,
   totalPages,
   openEllipsisInput,
 }) {
+  const { isDark } = useTheme();
   const pageTokens = buildPageTokens(currentPage, totalPages);
 
   return (
-    <div className="p-6 rounded-xl border" style={{ backgroundColor: '#f9f9fa', borderColor: '#e5e7eb' }}>
+    <div className={`p-6 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-[#f9f9fa] border-[#e5e7eb]'}`}>
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-        <h2 className="text-lg font-semibold text-gray-800">Daftar Jadwal Maintenance</h2>
+        <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Daftar Jadwal Maintenance</h2>
 
         <div
-          className="flex items-center rounded-full px-3 py-1 border"
-          style={{ backgroundColor: '#ffffff', minWidth: '240px', borderColor: '#e5e7eb' }}
+          className={`flex items-center rounded-full px-3 py-1 border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-[#e5e7eb]'}`}
+          style={{ minWidth: '240px' }}
         >
           <i
-            className="fa-solid fa-magnifying-glass me-2"
-            style={{ color: '#9ca3af' }}
+            className={`fa-solid fa-magnifying-glass me-2 ${isDark ? 'text-gray-400' : ''}`}
+            style={{ color: isDark ? undefined : '#9ca3af' }}
           ></i>
           <input
             type="text"
             placeholder="Cari no. kamar / judul..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-            className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
-            style={{ color: '#1f2937' }}
+            className={`flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm ${isDark ? 'text-gray-100 placeholder-gray-400' : ''}`}
+            style={{ color: isDark ? undefined : '#1f2937' }}
           />
         </div>
       </div>
 
       {loading ? (
-        <p style={{ color: '#6b7280' }}>Memuat data...</p>
+        <p className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280' }}>Memuat data...</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+              <tr className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280', fontSize: '0.85rem' }}>
                 <th className="text-left py-3 px-4 font-medium">No. Kamar</th>
                 <th className="text-left py-3 px-4 font-medium">Judul</th>
                 <th className="text-left py-3 px-4 font-medium">Tanggal Mulai</th>
@@ -88,44 +89,44 @@ function MaintenanceTable({
             <tbody>
               {paginatedSchedules.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-4" style={{ color: '#9ca3af' }}>
+                  <td colSpan="6" className={`text-center py-4 ${isDark ? 'text-gray-500' : ''}`} style={{ color: isDark ? undefined : '#9ca3af' }}>
                     {search.trim() ? 'Tidak ada jadwal yang cocok.' : 'Belum ada jadwal maintenance.'}
                   </td>
                 </tr>
               ) : (
                 paginatedSchedules.map((sched, idx) => (
-                  <tr key={sched.schedule_id ?? `empty-${sched.room_id}-${idx}`} style={{ borderColor: '#e5e7eb' }}>
+                  <tr key={sched.schedule_id ?? `empty-${sched.room_id}-${idx}`} className={isDark ? 'border-gray-700' : ''} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                     <td
-                      className="py-3 px-4 border-b font-semibold"
-                      style={{ borderColor: '#e5e7eb', color: '#111827' }}
+                      className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`}
+                      style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}
                     >
                       {sched.no_kamar}
                     </td>
                     <td
-                      className="py-3 px-4 border-b"
-                      style={{ borderColor: '#e5e7eb', color: sched.title ? '#1f2937' : '#9ca3af' }}
+                      className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
+                      style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : (sched.title ? '#1f2937' : '#9ca3af') }}
                     >
                       {sched.title || '-'}
                       {sched.notes && (
-                        <p className="text-xs text-gray-400 mt-0.5">{sched.notes}</p>
+                        <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>{sched.notes}</p>
                       )}
                     </td>
                      <td
-                       className="py-3 px-4 border-b"
-                       style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                       className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
+                       style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}
                      >
                        {formatDate(sched.scheduled_date) || '-'}
                      </td>
                      <td
-                       className="py-3 px-4 border-b"
-                       style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
+                       className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`}
+                       style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}
                      >
                        {formatDate(sched.ended_at) || '-'}
                      </td>
-                    <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <StatusBadge status={sched.status} />
                     </td>
-                    <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <div className="flex gap-2">
                         {sched.status === 'scheduled' && (
                           <>
@@ -160,7 +161,7 @@ function MaintenanceTable({
                           </>
                         )}
                         {(sched.status === 'completed' || sched.status === 'canceled' || !sched.status) && (
-                          <span className="text-xs text-gray-400">Tidak ada aksi</span>
+                          <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Tidak ada aksi</span>
                         )}
                       </div>
                     </td>
@@ -175,11 +176,11 @@ function MaintenanceTable({
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                 style={{
-                  backgroundColor: '#f1f3f5',
-                  color: currentPage === 1 ? '#9ca3af' : '#4b5563',
-                  cursor: currentPage === 1 ? 'default' : 'pointer',
+                  backgroundColor: isDark ? undefined : '#f1f3f5',
+                  color: isDark ? undefined : (currentPage === 1 ? '#9ca3af' : '#4b5563'),
+                  cursor: isDark ? undefined : (currentPage === 1 ? 'default' : 'pointer'),
                 }}
               >
                 Previous
@@ -192,10 +193,10 @@ function MaintenanceTable({
                     <button
                       key={token}
                       onClick={() => setCurrentPage(token)}
-                      className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                      className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                       style={{
-                        backgroundColor: isCurrent ? '#3b82f6' : '#f1f3f5',
-                        color: isCurrent ? '#ffffff' : '#4b5563',
+                        backgroundColor: isCurrent ? '#3b82f6' : (isDark ? undefined : '#f1f3f5'),
+                        color: isCurrent ? '#ffffff' : (isDark ? undefined : '#4b5563'),
                       }}
                     >
                       {token}
@@ -216,8 +217,8 @@ function MaintenanceTable({
                       onKeyDown={handlePageInputKeyDown}
                       onBlur={submitPageInput}
                       placeholder="No."
-                      className="w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none"
-                      style={{ borderColor: '#3b82f6', color: '#1f2937' }}
+                      className={`w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : ''}`}
+                      style={{ borderColor: isDark ? undefined : '#3b82f6', color: isDark ? undefined : '#1f2937' }}
                     />
                   );
                 }
@@ -227,8 +228,8 @@ function MaintenanceTable({
                     key={`${token}-${idx}`}
                     onClick={() => openEllipsisInput(token)}
                     title="Klik untuk lompat ke halaman tertentu"
-                    className="px-2 py-1 text-sm rounded-md hover:bg-gray-100 transition-colors"
-                    style={{ color: '#9ca3af' }}
+                    className={`px-2 py-1 text-sm rounded-md transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                    style={{ color: isDark ? undefined : '#9ca3af' }}
                   >
                     ...
                   </button>
@@ -238,11 +239,11 @@ function MaintenanceTable({
               <button
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                 style={{
-                  backgroundColor: '#f1f3f5',
-                  color: currentPage === totalPages ? '#9ca3af' : '#4b5563',
-                  cursor: currentPage === totalPages ? 'default' : 'pointer',
+                  backgroundColor: isDark ? undefined : '#f1f3f5',
+                  color: isDark ? undefined : (currentPage === totalPages ? '#9ca3af' : '#4b5563'),
+                  cursor: isDark ? undefined : (currentPage === totalPages ? 'default' : 'pointer'),
                 }}
               >
                 Next

@@ -17,6 +17,7 @@ import Staff from './pages/Staff';
 import EndAttendance from './pages/Endattendance';
 import AbsensiLogs from './pages/AbsensiLogs';
 import IzinForm from './pages/IzinForm';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 function MaintenancePage() {
     return <PembagianMaintenance />;
@@ -55,16 +56,17 @@ function CleaningPage() {
     return <PenugasanPembersihan />;
 }
 
-function App () {
+function AppContent() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const { isDark } = useTheme();
 
     const sidebarWidth = sidebarCollapsed ? 'md:ml-16' : 'md:ml-56';
 
     const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
     const routeLayout = (pageTitle, children) => (
-        <div className="flex min-h-screen bg-gray-50 relative">
+        <div className={`flex min-h-screen relative ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
             <Sidebar 
                 collapsed={sidebarCollapsed} 
                 onToggle={() => setSidebarCollapsed(prev => !prev)}
@@ -97,6 +99,14 @@ function App () {
                 <Route path="/absensi-logs" element={routeLayout('Log Absensi', <AbsensiLogs/>)}/>
                 <Route path="/izin" element={routeLayout('Izin', <IzinForm/>)}/>
             </Routes>
+    )
+}
+
+function App () {
+    return(
+        <ThemeProvider>
+            <AppContent />
+        </ThemeProvider>
     )
 }
 

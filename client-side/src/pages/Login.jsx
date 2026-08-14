@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Swal from 'sweetalert2';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { login, loading, error, setError } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -29,20 +31,20 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-900">
-      <div className="bg-white w-[360px] p-9 rounded-2xl shadow-2xl">
+      <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} w-[360px] p-9 rounded-2xl shadow-2xl`}>
         <div className="w-14 h-14 mx-auto mb-3 flex items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-2xl">
           🏨
         </div>
-        <h1 className="text-center text-xl font-semibold text-gray-800 mb-0.5">
+        <h1 className={`text-center text-xl font-semibold mb-0.5 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
           Grand Nusantara Hotel
         </h1>
-        <p className="text-center text-gray-500 text-sm mb-6">
+        <p className={`text-center text-sm mb-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Sistem Housekeeping
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-left text-xs font-semibold text-gray-500 mb-1">
+            <label className={`block text-left text-xs font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               Username or Email
             </label>
             <input
@@ -52,12 +54,14 @@ export default function Login() {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Masukkan username atau email"
               required
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-blue-500 ${
+                isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-left text-xs font-semibold text-gray-500 mb-1">
+            <label className={`block text-left text-xs font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
               Password
             </label>
             <input
@@ -67,7 +71,9 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Masukkan password"
               required
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-blue-500 ${
+                isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+              }`}
             />
           </div>
 
@@ -84,13 +90,13 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-4 text-xs text-gray-500 leading-relaxed">
+        <p className={`mt-4 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Login memvalidasi ke tabel <b>users</b>, lalu menampilkan nama &amp; role
           dari <b>employees</b> + <b>positions</b>.
         </p>
-        <p className="mt-3 text-center text-sm text-gray-500">
+        <p className={`mt-3 text-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Belum punya akun?{' '}
-          <Link to="/register" className="font-medium text-blue-600 hover:underline">
+          <Link to="/register" className={`font-medium ${isDark ? 'text-blue-400' : 'text-blue-600'} hover:underline`}>
             Daftar
           </Link>
         </p>
