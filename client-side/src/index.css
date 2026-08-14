@@ -175,4 +175,67 @@
 
 .dark .bg-orange-100 {
   background-color: #431407;
-} 
+}
+
+/* Responsive Table to Cards */
+@media (max-width: 767px) {
+  .responsive-table {
+    display: block;
+  }
+
+  .responsive-table thead {
+    display: none;
+  }
+
+  .responsive-table tbody {
+    display: block;
+  }
+
+  .responsive-table tr {
+    display: block;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    background: #ffffff;
+  }
+
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: right;
+    gap: 0.5rem;
+  }
+
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    margin-right: 0.5rem;
+    color: #6b7280;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .responsive-table td:last-child {
+    border-bottom: none;
+  }
+
+  .dark .responsive-table tr {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .dark .responsive-table td {
+    border-bottom-color: #374151;
+  }
+
+  .dark .responsive-table td::before {
+    color: #9ca3af;
+  }
+}
+ 

@@ -65,7 +65,7 @@ function AttendanceLogs() {
         ) : logs.length === 0 ? (
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Belum ada riwayat absensi dalam 4 minggu terakhir.</p>
         ) : (
-          <table className={`w-full text-left text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          <table className={`w-full text-left text-sm responsive-table ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             <thead>
               <tr className={`border-b text-xs uppercase ${isDark ? 'border-gray-700 text-gray-400' : 'border-gray-200 text-gray-500'}`}>
                 {scope === 'all' && <th className="pb-3 pr-4 font-medium">Nama</th>}
@@ -80,17 +80,17 @@ function AttendanceLogs() {
               {logs.map((log) => (
                 <tr key={log.id}>
                   {scope === 'all' && (
-                    <td className={`py-3 pr-4 font-medium ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{log.full_name}</td>
+                    <td data-label="Nama" className={`py-3 pr-4 font-medium ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{log.full_name}</td>
                   )}
-                  <td className={`py-3 pr-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDateTime(log.check_in_at)}</td>
-                  <td className={`py-3 pr-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDateTime(log.check_out_at)}</td>
-                  <td className="py-3 pr-4">
+                  <td data-label="Check-in" className={`py-3 pr-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDateTime(log.check_in_at)}</td>
+                  <td data-label="Check-out" className={`py-3 pr-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{formatDateTime(log.check_out_at)}</td>
+                  <td data-label="Status" className="py-3 pr-4">
                     <StatusBadge status={log.status} />
                   </td>
-                  <td className={`py-3 pr-4 max-w-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <td data-label="Catatan / Alasan Izin" className={`py-3 pr-4 max-w-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                     {log.status === 'izin' ? log.izin_reason : log.notes || '-'}
                   </td>
-                  <td className="py-3">
+                  <td data-label="Foto" className="py-3">
                     {log.photos && log.photos.length > 0 ? (
                       <div className="flex gap-1">
                         {log.photos.slice(0, 3).map((url, i) => (

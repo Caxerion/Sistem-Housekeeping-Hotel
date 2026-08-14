@@ -259,7 +259,7 @@ const StatusPembersihan = () => {
           <p className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280' }}>Memuat data...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm responsive-table">
               <thead>
                 <tr className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280', fontSize: '0.85rem' }}>
                   <th className="text-left py-3 px-4 font-medium">No</th>
@@ -282,19 +282,19 @@ const StatusPembersihan = () => {
                 ) : (
                   paginatedSchedules.map((schedule, idx) => (
                     <tr key={schedule.schedule_id ?? `empty-${schedule.room_id}-${idx}`} className={isDark ? 'border-gray-700' : ''} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
+                      <td data-label="No" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {startIndex + idx + 1}
                       </td>
-                      <td className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}>
+                      <td data-label="Nama Kamar" className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}>
                         {schedule.no_kamar}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
+                      <td data-label="Tipe Kamar" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {schedule.room_type || '-'}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
+                      <td data-label="Tanggal" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {schedule.scheduled_date || '-'}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                      <td data-label="Petugas" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {Array.isArray(schedule.assigned_staff) && schedule.assigned_staff.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {schedule.assigned_staff.map((name, i) => (
@@ -310,14 +310,14 @@ const StatusPembersihan = () => {
                           <span className={isDark ? 'text-gray-500' : ''} style={{ color: isDark ? undefined : '#9ca3af' }}>-</span>
                         )}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                      <td data-label="Status" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.schedule_id ? (
                           <StatusBadge status={getDisplayStatus(schedule)} />
                         ) : (
                           <HousekeepingBadge status={getDisplayStatus(schedule)} />
                         )}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                      <td data-label="Pemeriksaan" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.inspection_status === 'pending' && (
                           <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${isDark ? 'bg-yellow-900/40 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
                             Menunggu Pemeriksaan
@@ -335,7 +335,7 @@ const StatusPembersihan = () => {
                         )}
                         {!schedule.inspection_status && <span className={isDark ? 'text-gray-500' : ''} style={{ color: isDark ? undefined : '#9ca3af' }}>-</span>}
                       </td>
-                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                      <td data-label="Aksi" className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.inspection_status === 'pending' ? (
                           <button
                             type="button"

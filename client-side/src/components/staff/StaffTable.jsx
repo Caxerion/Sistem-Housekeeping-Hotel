@@ -145,7 +145,7 @@ function StaffTable({ staffList, loading, error, searchQuery, statusFilter }) {
             : 'Tidak ada staff dengan status ini.'}
         </p>
       ) : (
-        <table className="w-full text-left table-auto md:table-fixed">
+        <table className="w-full text-left table-auto md:table-fixed responsive-table">
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-gray-800 text-sm font-semibold pb-3 pr-4">No</th>
@@ -159,10 +159,10 @@ function StaffTable({ staffList, loading, error, searchQuery, statusFilter }) {
           <tbody className="divide-y divide-gray-200">
             {filteredStaffList.map((staff, idx) => (
               <tr key={staff.id}>
-                <td className="py-4 pr-4 text-gray-500 text-sm">{idx + 1}</td>
-                <td className="py-4 pr-4 text-gray-800 text-sm font-medium">{staff.full_name}</td>
-                <td className="py-4 pr-4 text-gray-500 text-sm">{staff.position}</td>
-                <td className="py-4 pr-4 text-sm">
+                <td data-label="No" className="py-4 pr-4 text-gray-500 text-sm">{idx + 1}</td>
+                <td data-label="Nama Petugas" className="py-4 pr-4 text-gray-800 text-sm font-medium">{staff.full_name}</td>
+                <td data-label="Posisi" className="py-4 pr-4 text-gray-500 text-sm">{staff.position}</td>
+                <td data-label="Lokasi" className="py-4 pr-4 text-sm">
                   {staff.shift ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                       {`Kamar ${staff.shift}`}
@@ -171,8 +171,8 @@ function StaffTable({ staffList, loading, error, searchQuery, statusFilter }) {
                     <span className="text-gray-400">-</span>
                   )}
                 </td>
-                <td className="py-4 pr-4 text-gray-500 text-sm">{staff.phone || '-'}</td>
-                <td className="py-4 text-sm">
+                <td data-label="No. Handphone" className="py-4 pr-4 text-gray-500 text-sm">{staff.phone || '-'}</td>
+                <td data-label="Status" className="py-4 text-sm">
                   <StatusBadge status={staff.status} />
                 </td>
               </tr>

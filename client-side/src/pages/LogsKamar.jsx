@@ -95,7 +95,7 @@ function LogsKamar() {
         <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Logs Kamar</h1>
             <div className="overflow-x-auto bg-white rounded-lg shadow">
-                <table className="min-w-full text-sm text-left text-gray-600">
+                <table className="min-w-full text-sm text-left text-gray-600 responsive-table">
                     <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
                             <th className="px-6 py-3">No</th>
@@ -116,12 +116,12 @@ function LogsKamar() {
                         ) : (
                             logs.map((row, index) => (
                                 <tr key={index} className="hover:bg-gray-50">
-                                    <td className="px-6 py-3">{index + 1}</td>
-                                    <td className="px-6 py-3 font-medium text-gray-800">{row.room_number}</td>
-                                    <td className="px-6 py-3">{getActionLabel(row)}</td>
-                                    <td className="px-6 py-3">{formatDateTime(row.checked_in_at)}</td>
-                                    <td className="px-6 py-3">{formatDateTime(row.checked_out_at)}</td>
-                                    <td className="px-6 py-3">
+                                    <td data-label="No" className="px-6 py-3">{index + 1}</td>
+                                    <td data-label="Kamar" className="px-6 py-3 font-medium text-gray-800">{row.room_number}</td>
+                                    <td data-label="Aksi" className="px-6 py-3">{getActionLabel(row)}</td>
+                                    <td data-label="Waktu Check In" className="px-6 py-3">{formatDateTime(row.checked_in_at)}</td>
+                                    <td data-label="Waktu Check Out" className="px-6 py-3">{formatDateTime(row.checked_out_at)}</td>
+                                    <td data-label="Status Kamar" className="px-6 py-3">
                                         <span className={`inline-block px-2 py-1 text-xs font-semibold rounded ${
                                             row.room_status === 'available'
                                                 ? 'bg-green-100 text-green-700'
