@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { StatusBadge, HousekeepingBadge } from '../components/maintenance/MaintenanceBadges';
 import Swal from 'sweetalert2';
+import { useTheme } from '../context/ThemeContext';
 
 function buildPageTokens(current, total) {
   const delta = 1;
@@ -18,6 +19,7 @@ function buildPageTokens(current, total) {
 }
 
 const StatusPembersihan = () => {
+  const { isDark } = useTheme();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -58,7 +60,7 @@ const StatusPembersihan = () => {
     if (typeof photos === 'string') {
       try {
         const parsed = JSON.parse(photos);
-        return Array.isArray(parsed) ? parsed : [photos];
+        return Array.isArray(parsed) ? [parsed] : [photos];
       } catch {
         return [photos];
       }
@@ -155,7 +157,6 @@ const StatusPembersihan = () => {
       if (now - terminalTime >= 5 * 60 * 1000) {
         return {
           ...sched,
-          schedule_id: null,
           title: null,
           notes: null,
           scheduled_date: null,
@@ -168,6 +169,8 @@ const StatusPembersihan = () => {
           assigned_staff: [],
           dijadwalkan_oleh: null,
           photos: null,
+          inspection_status: null,
+          inspection_note: null,
         };
       }
     }
@@ -225,40 +228,40 @@ const StatusPembersihan = () => {
   return (
     <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Status Pembersihan</h1>
-        <p className="text-gray-500 mt-2">Daftar status pembersihan kamar beserta jadwal dan petugas yang ditugaskan.</p>
+        <h1 className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Status Pembersihan</h1>
+        <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Daftar status pembersihan kamar beserta jadwal dan petugas yang ditugaskan.</p>
       </div>
 
-      <div className="p-6 rounded-xl border" style={{ backgroundColor: '#f9f9fa', borderColor: '#e5e7eb' }}>
+      <div className={`p-6 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-[#f9f9fa] border-[#e5e7eb]'}`}>
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-          <h2 className="text-lg font-semibold text-gray-800">Daftar Status Pembersihan</h2>
+          <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Daftar Status Pembersihan</h2>
 
           <div
-            className="flex items-center rounded-full px-3 py-1 border"
-            style={{ backgroundColor: '#ffffff', minWidth: '240px', borderColor: '#e5e7eb' }}
+            className={`flex items-center rounded-full px-3 py-1 border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-[#e5e7eb]'}`}
+            style={{ minWidth: '240px' }}
           >
             <i
-              className="fa-solid fa-magnifying-glass me-2"
-              style={{ color: '#9ca3af' }}
+              className={`fa-solid fa-magnifying-glass me-2 ${isDark ? 'text-gray-400' : ''}`}
+              style={{ color: isDark ? undefined : '#9ca3af' }}
             ></i>
             <input
               type="text"
-                               placeholder="Cari no. kamar / tipe / petugas..."
+              placeholder="Cari no. kamar / tipe / petugas..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
-              style={{ color: '#1f2937' }}
+              className={`flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm ${isDark ? 'text-gray-100 placeholder-gray-400' : ''}`}
+              style={{ color: isDark ? undefined : '#1f2937' }}
             />
           </div>
         </div>
 
         {loading ? (
-          <p style={{ color: '#6b7280' }}>Memuat data...</p>
+          <p className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280' }}>Memuat data...</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                <tr className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280', fontSize: '0.85rem' }}>
                   <th className="text-left py-3 px-4 font-medium">No</th>
                   <th className="text-left py-3 px-4 font-medium">Nama Kamar</th>
                   <th className="text-left py-3 px-4 font-medium">Tipe Kamar</th>
@@ -272,79 +275,67 @@ const StatusPembersihan = () => {
               <tbody>
                 {paginatedSchedules.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-4" style={{ color: '#9ca3af' }}>
+                    <td colSpan="8" className={`text-center py-4 ${isDark ? 'text-gray-500' : ''}`} style={{ color: isDark ? undefined : '#9ca3af' }}>
                       {search.trim() ? 'Tidak ada jadwal yang cocok.' : 'Belum ada jadwal pembersihan.'}
                     </td>
                   </tr>
                 ) : (
                   paginatedSchedules.map((schedule, idx) => (
-                    <tr key={schedule.schedule_id ?? `empty-${schedule.room_id}-${idx}`} style={{ borderColor: '#e5e7eb' }}>
-                      <td
-                        className="py-3 px-4 border-b"
-                        style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
-                      >
+                    <tr key={schedule.schedule_id ?? `empty-${schedule.room_id}-${idx}`} className={isDark ? 'border-gray-700' : ''} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {startIndex + idx + 1}
                       </td>
-                      <td
-                        className="py-3 px-4 border-b font-semibold"
-                        style={{ borderColor: '#e5e7eb', color: '#111827' }}
-                      >
+                      <td className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}>
                         {schedule.no_kamar}
                       </td>
-                      <td
-                        className="py-3 px-4 border-b"
-                        style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
-                      >
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {schedule.room_type || '-'}
                       </td>
-                      <td
-                        className="py-3 px-4 border-b"
-                        style={{ borderColor: '#e5e7eb', color: '#6b7280' }}
-                      >
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                         {schedule.scheduled_date || '-'}
                       </td>
-                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {Array.isArray(schedule.assigned_staff) && schedule.assigned_staff.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
                             {schedule.assigned_staff.map((name, i) => (
                               <span
                                 key={i}
-                                className="inline-block px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600"
+                                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-medium ${isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}
                               >
                                 {name}
                               </span>
                             ))}
                           </div>
                         ) : (
-                          <span style={{ color: '#9ca3af' }}>-</span>
+                          <span className={isDark ? 'text-gray-500' : ''} style={{ color: isDark ? undefined : '#9ca3af' }}>-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.schedule_id ? (
                           <StatusBadge status={getDisplayStatus(schedule)} />
                         ) : (
                           <HousekeepingBadge status={getDisplayStatus(schedule)} />
                         )}
                       </td>
-                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb', color: '#6b7280' }}>
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.inspection_status === 'pending' && (
-                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-yellow-100 text-yellow-700">
+                          <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${isDark ? 'bg-yellow-900/40 text-yellow-300' : 'bg-yellow-100 text-yellow-700'}`}>
                             Menunggu Pemeriksaan
                           </span>
                         )}
                         {schedule.inspection_status === 'approved' && (
-                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+                          <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${isDark ? 'bg-green-900/40 text-green-300' : 'bg-green-100 text-green-700'}`}>
                             Disetujui
                           </span>
                         )}
                         {schedule.inspection_status === 'revision' && (
-                          <span className="inline-block px-2 py-1 rounded-full text-[10px] font-medium bg-orange-100 text-orange-700">
+                          <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-medium ${isDark ? 'bg-orange-900/40 text-orange-300' : 'bg-orange-100 text-orange-700'}`}>
                             Revisi
                           </span>
                         )}
-                        {!schedule.inspection_status && <span style={{ color: '#9ca3af' }}>-</span>}
+                        {!schedule.inspection_status && <span className={isDark ? 'text-gray-500' : ''} style={{ color: isDark ? undefined : '#9ca3af' }}>-</span>}
                       </td>
-                      <td className="py-3 px-4 border-b" style={{ borderColor: '#e5e7eb' }}>
+                      <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         {schedule.inspection_status === 'pending' ? (
                           <button
                             type="button"
@@ -354,7 +345,7 @@ const StatusPembersihan = () => {
                             Review
                           </button>
                         ) : (
-                          <span style={{ color: '#9ca3af' }}>-</span>
+                          <span className={isDark ? 'text-gray-500' : ''} style={{ color: isDark ? undefined : '#9ca3af' }}>-</span>
                         )}
                       </td>
                     </tr>
@@ -368,11 +359,11 @@ const StatusPembersihan = () => {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                   style={{
-                    backgroundColor: '#f1f3f5',
-                    color: currentPage === 1 ? '#9ca3af' : '#4b5563',
-                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    backgroundColor: isDark ? undefined : '#f1f3f5',
+                    color: isDark ? undefined : (currentPage === 1 ? '#9ca3af' : '#4b5563'),
+                    cursor: isDark ? undefined : (currentPage === 1 ? 'default' : 'pointer'),
                   }}
                 >
                   Previous
@@ -385,10 +376,10 @@ const StatusPembersihan = () => {
                       <button
                         key={token}
                         onClick={() => setCurrentPage(token)}
-                        className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                         style={{
-                          backgroundColor: isCurrent ? '#3b82f6' : '#f1f3f5',
-                          color: isCurrent ? '#ffffff' : '#4b5563',
+                          backgroundColor: isCurrent ? '#3b82f6' : (isDark ? undefined : '#f1f3f5'),
+                          color: isCurrent ? '#ffffff' : (isDark ? undefined : '#4b5563'),
                         }}
                       >
                         {token}
@@ -409,8 +400,8 @@ const StatusPembersihan = () => {
                         onKeyDown={handlePageInputKeyDown}
                         onBlur={submitPageInput}
                         placeholder="No."
-                        className="w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none"
-                        style={{ borderColor: '#3b82f6', color: '#1f2937' }}
+                        className={`w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : ''}`}
+                        style={{ borderColor: isDark ? undefined : '#3b82f6', color: isDark ? undefined : '#1f2937' }}
                       />
                     );
                   }
@@ -420,8 +411,8 @@ const StatusPembersihan = () => {
                       key={`${token}-${idx}`}
                       onClick={() => openEllipsisInput(token)}
                       title="Klik untuk lompat ke halaman tertentu"
-                      className="px-2 py-1 text-sm rounded-md hover:bg-gray-100 transition-colors"
-                      style={{ color: '#9ca3af' }}
+                      className={`px-2 py-1 text-sm rounded-md transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                      style={{ color: isDark ? undefined : '#9ca3af' }}
                     >
                       ...
                     </button>
@@ -431,11 +422,11 @@ const StatusPembersihan = () => {
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                   style={{
-                    backgroundColor: '#f1f3f5',
-                    color: currentPage === totalPages ? '#9ca3af' : '#4b5563',
-                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    backgroundColor: isDark ? undefined : '#f1f3f5',
+                    color: isDark ? undefined : (currentPage === totalPages ? '#9ca3af' : '#4b5563'),
+                    cursor: isDark ? undefined : (currentPage === totalPages ? 'default' : 'pointer'),
                   }}
                 >
                   Next
@@ -449,10 +440,10 @@ const StatusPembersihan = () => {
       {reviewModal.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setReviewModal({ open: false, schedule: null })} />
-          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-800">Review Pembersihan</h2>
-              <button onClick={() => setReviewModal({ open: false, schedule: null })} className="text-gray-400 hover:text-gray-600 p-1" aria-label="Tutup">
+          <div className={`relative rounded-xl shadow-2xl w-full max-w-md ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b sticky top-0 rounded-t-xl ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-100 bg-white'}`}>
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Review Pembersihan</h2>
+              <button onClick={() => setReviewModal({ open: false, schedule: null })} className={`p-1 ${isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'}`} aria-label="Tutup">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 6 6 18" />
                   <path d="m6 6 12 12" />
@@ -460,20 +451,20 @@ const StatusPembersihan = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className={`p-6 space-y-4 ${isDark ? 'text-gray-100' : ''}`}>
               <div>
-                <p className="text-sm text-gray-500">Kamar</p>
-                <p className="text-base font-semibold text-gray-800">#{reviewModal.schedule?.no_kamar}</p>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Kamar</p>
+                <p className={`text-base font-semibold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>#{reviewModal.schedule?.no_kamar}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Judul</p>
-                <p className="text-base text-gray-800">{reviewModal.schedule?.title}</p>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Judul</p>
+                <p className={`text-base ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>{reviewModal.schedule?.title}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Foto Dokumentasi Staff</p>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Foto Dokumentasi Staff</p>
                 {(() => {
                   const photos = parsePhotos(reviewModal.schedule?.photos);
-                  if (photos.length === 0) return <p className="text-xs text-gray-400">Tidak ada foto.</p>;
+                  if (photos.length === 0) return <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Tidak ada foto.</p>;
                   return (
                     <div className="flex flex-wrap gap-2">
                       {photos.map((photo, idx) => (
@@ -481,7 +472,7 @@ const StatusPembersihan = () => {
                           key={idx}
                           src={`http://localhost:3000${photo}`}
                           alt={`Foto ${idx + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                          className={`w-20 h-20 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-200'}`}
                         />
                       ))}
                     </div>
@@ -489,14 +480,14 @@ const StatusPembersihan = () => {
                 })()}
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Catatan Review (Opsional)</p>
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Catatan Review (Opsional)</p>
                 <textarea
                   value={reviewNote}
                   onChange={(e) => setReviewNote(e.target.value)}
                   rows={3}
                   placeholder="Berikan feedback untuk staff..."
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-blue-500 resize-none"
-                  style={{ color: '#1f2937' }}
+                  className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-blue-500 resize-none ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' : 'border-gray-200'}`}
+                  style={{ color: isDark ? undefined : '#1f2937' }}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -523,7 +514,7 @@ const StatusPembersihan = () => {
                 <button
                   type="button"
                   onClick={() => setReviewModal({ open: false, schedule: null })}
-                  className="rounded-lg px-4 py-2.5 font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                  className={`rounded-lg px-4 py-2.5 font-semibold transition-colors ${isDark ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
                   Batal
                 </button>

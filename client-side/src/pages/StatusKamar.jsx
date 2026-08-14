@@ -4,6 +4,7 @@ import api from '../services/api';
 import EditButtonUniversal from '../components/editbuttonmodal/EditButtonUniversal';
 import EditButtonStatusKamar from '../components/editbuttonmodal/EditButtonStatusKamar';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const formatRupiah = (angka) => {
   if (!angka) return '-';
@@ -16,24 +17,26 @@ const getFloor = (roomNumber) => {
 };
 
 const statusConfig = {
-  available: { label: 'Available', bg: '#dcfce7', color: '#16a34a' },
-  occupied: { label: 'Occupied', bg: '#fee2e2', color: '#dc2626' },
-  maintenance: { label: 'Maintenance', bg: '#fef3c7', color: '#d97706' },
-  reserved: { label: 'Reserved', bg: '#dbeafe', color: '#2563eb' },
+  available: { label: 'Available', lightBg: 'bg-green-100', lightColor: 'text-green-700', darkBg: 'bg-green-900/40', darkColor: 'text-green-300' },
+  occupied: { label: 'Occupied', lightBg: 'bg-red-100', lightColor: 'text-red-700', darkBg: 'bg-red-900/40', darkColor: 'text-red-300' },
+  maintenance: { label: 'Maintenance', lightBg: 'bg-yellow-100', lightColor: 'text-yellow-700', darkBg: 'bg-yellow-900/40', darkColor: 'text-yellow-300' },
+  reserved: { label: 'Reserved', lightBg: 'bg-blue-100', lightColor: 'text-blue-700', darkBg: 'bg-blue-900/40', darkColor: 'text-blue-300' },
 };
 
 const housekeepingConfig = {
-  clean: { label: "Clean", bg: "#dcfce7", color: "#16a34a" },
-  dirty: { label: "Dirty", bg: "#fee2e2", color: "#dc2626" },
-  cleaning: { label: "Cleaning", bg: "#fef3c7", color: "#d97706" },
+  clean: { label: "Clean", lightBg: "bg-green-100", lightColor: "text-green-700", darkBg: 'bg-green-900/40', darkColor: 'text-green-300' },
+  dirty: { label: "Dirty", lightBg: "bg-red-100", lightColor: "text-red-700", darkBg: 'bg-red-900/40', darkColor: 'text-red-300' },
+  cleaning: { label: "Cleaning", lightBg: "bg-yellow-100", lightColor: "text-yellow-700", darkBg: 'bg-yellow-900/40', darkColor: 'text-yellow-300' },
 };
 
 const StatusBadge = ({ status }) => {
-  const config = statusConfig[status] || { label: status, bg: '#f3f4f6', color: '#6b7280' };
+  const { isDark } = useTheme();
+  const config = statusConfig[status] || { label: status, lightBg: 'bg-gray-100', lightColor: 'text-gray-600', darkBg: 'bg-gray-700', darkColor: 'text-gray-400' };
+  const bg = isDark ? config.darkBg : config.lightBg;
+  const color = isDark ? config.darkColor : config.lightColor;
   return (
     <span
-      className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase"
-      style={{ backgroundColor: config.bg, color: config.color }}
+      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${bg} ${color}`}
     >
       {config.label}
     </span>
@@ -41,11 +44,13 @@ const StatusBadge = ({ status }) => {
 };
 
 const HousekeepingBadge = ({ status }) => {
-  const config = housekeepingConfig[status] || { label: status, bg: "#f3f4f6", color: "#6b7280" };
+  const { isDark } = useTheme();
+  const config = housekeepingConfig[status] || { label: status, lightBg: "bg-gray-100", lightColor: "text-gray-600", darkBg: 'bg-gray-700', darkColor: 'text-gray-400' };
+  const bg = isDark ? config.darkBg : config.lightBg;
+  const color = isDark ? config.darkColor : config.lightColor;
   return (
     <span
-      className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase"
-      style={{ backgroundColor: config.bg, color: config.color }}
+      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${bg} ${color}`}
     >
       {config.label}
     </span>
@@ -71,6 +76,7 @@ const buildPageTokens = (current, total) => {
 
 function StatusKamar() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
@@ -197,10 +203,10 @@ function StatusKamar() {
     <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-4">
       {/* Title */}
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-800">Status Kamar</h1>
+        <h1 className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>Status Kamar</h1>
       </div>
 
-      <div className="p-6 rounded-xl border" style={{ backgroundColor: '#f9f9fa', borderColor: '#e5e7eb' }}>
+      <div className={`p-6 rounded-xl border ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-[#f9f9fa] border-[#e5e7eb]'}`}>
         {/* Filter & Search */}
         <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
           <div className="flex gap-2 flex-wrap items-center">
@@ -232,27 +238,27 @@ function StatusKamar() {
             </select>
           </div>
 
-          <div className="flex items-center rounded-full px-3 py-1 border bg-white min-w-[240px]" style={{ borderColor: '#e5e7eb' }}>
-            <i className="fa-solid fa-magnifying-glass me-2" style={{ color: '#9ca3af' }} />
+          <div className={`flex items-center rounded-full px-3 py-1 border ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-[#e5e7eb]'}`} style={{ minWidth: '240px' }}>
+            <i className={`fa-solid fa-magnifying-glass me-2 ${isDark ? 'text-gray-400' : ''}`} style={{ color: isDark ? undefined : '#9ca3af' }} />
             <input
               type="text"
               placeholder="Cari no. kamar..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm"
-              style={{ color: '#1f2937' }}
+              className={`flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 text-sm ${isDark ? 'text-gray-100 placeholder-gray-400' : ''}`}
+              style={{ color: isDark ? undefined : '#1f2937' }}
             />
           </div>
         </div>
 
         {/* Table */}
         {loading ? (
-          <p style={{ color: '#6b7280' }}>Memuat data kamar...</p>
+          <p className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280' }}>Memuat data kamar...</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr style={{ color: '#6b7280', fontSize: '0.85rem' }}>
+                <tr className={isDark ? 'text-gray-400' : ''} style={{ color: isDark ? undefined : '#6b7280', fontSize: '0.85rem' }}>
                   <th className="text-left py-3 px-4 font-medium">No. Kamar</th>
                   <th className="text-left py-3 px-4 font-medium">Tipe Kamar</th>
                   <th className="text-left py-3 px-4 font-medium">Lantai</th>
@@ -264,27 +270,27 @@ function StatusKamar() {
               </thead>
               <tbody>
                 {paginatedRooms.map((room) => (
-                  <tr key={room.id} style={{ borderColor: '#e5e7eb' }}>
-                    <td className="py-3 px-4 border-b font-semibold" style={{ color: '#111827' }}>
+                  <tr key={room.id} className={isDark ? 'border-gray-700' : ''} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
+                    <td className={`py-3 px-4 border-b font-semibold ${isDark ? 'text-gray-100' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#111827' }}>
                       {room.room_number}
                     </td>
-                    <td className="py-3 px-4 border-b" style={{ color: '#6b7280' }}>
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                       {room.room_type}
                     </td>
-                    <td className="py-3 px-4 border-b" style={{ color: '#6b7280' }}>
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                       {getFloor(room.room_number)}
                     </td>
-                    <td className="py-3 px-4 border-b" style={{ color: '#6b7280' }}>
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb', color: isDark ? undefined : '#6b7280' }}>
                       {formatRupiah(room.base_price)}
                     </td>
-                    <td className="py-3 px-4 border-b">
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <StatusBadge status={room.occupancy_status} />
                     </td>
-                    <td className="py-3 px-4 border-b">
+                    <td className={`py-3 px-4 border-b ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                       <HousekeepingBadge status={room.housekeeping_status} />
                     </td>
                     {canEdit && (
-                      <td className="py-3 px-4 border-b text-center">
+                      <td className={`py-3 px-4 border-b text-center ${isDark ? 'text-gray-300' : ''}`} style={{ borderColor: isDark ? undefined : '#e5e7eb' }}>
                         <EditButtonUniversal
                           onClick={() => handleEditClick(room)}
                           label="Edit"
@@ -297,7 +303,7 @@ function StatusKamar() {
                 ))}
                 {paginatedRooms.length === 0 && (
                   <tr>
-                    <td colSpan={canEdit ? 7 : 6} className="text-center py-4" style={{ color: '#9ca3af' }}>
+                    <td colSpan={canEdit ? 7 : 6} className={`text-center py-4 ${isDark ? 'text-gray-500' : ''}`} style={{ color: isDark ? undefined : '#9ca3af' }}>
                       Tidak ada kamar yang cocok.
                     </td>
                   </tr>
@@ -311,11 +317,11 @@ function StatusKamar() {
                 <button
                   onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                   style={{
-                    backgroundColor: '#f1f3f5',
-                    color: currentPage === 1 ? '#9ca3af' : '#4b5563',
-                    cursor: currentPage === 1 ? 'default' : 'pointer',
+                    backgroundColor: isDark ? undefined : '#f1f3f5',
+                    color: isDark ? undefined : (currentPage === 1 ? '#9ca3af' : '#4b5563'),
+                    cursor: isDark ? undefined : (currentPage === 1 ? 'default' : 'pointer'),
                   }}
                 >
                   Previous
@@ -328,10 +334,10 @@ function StatusKamar() {
                       <button
                         key={token}
                         onClick={() => setCurrentPage(token)}
-                        className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                         style={{
-                          backgroundColor: isCurrent ? '#3b82f6' : '#f1f3f5',
-                          color: isCurrent ? '#ffffff' : '#4b5563',
+                          backgroundColor: isCurrent ? '#3b82f6' : (isDark ? undefined : '#f1f3f5'),
+                          color: isCurrent ? '#ffffff' : (isDark ? undefined : '#4b5563'),
                         }}
                       >
                         {token}
@@ -352,8 +358,8 @@ function StatusKamar() {
                         onKeyDown={handlePageInputKeyDown}
                         onBlur={submitPageInput}
                         placeholder="No."
-                        className="w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none"
-                        style={{ borderColor: '#3b82f6', color: '#1f2937' }}
+                        className={`w-14 px-2 py-1 rounded-md text-sm text-center border focus:outline-none ${isDark ? 'bg-gray-700 border-gray-600 text-gray-100' : ''}`}
+                        style={{ borderColor: isDark ? undefined : '#3b82f6', color: isDark ? undefined : '#1f2937' }}
                       />
                     );
                   }
@@ -363,8 +369,8 @@ function StatusKamar() {
                       key={`${token}-${idx}`}
                       onClick={() => openEllipsisInput(token)}
                       title="Klik untuk lompat ke halaman tertentu"
-                      className="px-2 py-1 text-sm rounded-md hover:bg-gray-100 transition-colors"
-                      style={{ color: '#9ca3af' }}
+                      className={`px-2 py-1 text-sm rounded-md transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700' : 'hover:bg-gray-100'}`}
+                      style={{ color: isDark ? undefined : '#9ca3af' }}
                     >
                       ...
                     </button>
@@ -374,11 +380,11 @@ function StatusKamar() {
                 <button
                   onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded-md text-sm font-medium transition-colors"
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : ''}`}
                   style={{
-                    backgroundColor: '#f1f3f5',
-                    color: currentPage === totalPages ? '#9ca3af' : '#4b5563',
-                    cursor: currentPage === totalPages ? 'default' : 'pointer',
+                    backgroundColor: isDark ? undefined : '#f1f3f5',
+                    color: isDark ? undefined : (currentPage === totalPages ? '#9ca3af' : '#4b5563'),
+                    cursor: isDark ? undefined : (currentPage === totalPages ? 'default' : 'pointer'),
                   }}
                 >
                   Next
